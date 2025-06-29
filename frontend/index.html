@@ -758,6 +758,25 @@
         newPinEmojiInput.value = '';
         newPinColorSelect.value = '#ff8c00';
       });
+      
+      function reportPosition(x, y){
+        fetch(`/items/${id}/move`, {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({
+            newX: x,
+            newY: y,
+          })
+        },
+        )
+        .then(response => response.json())
+        .then(data => {
+          if(data.success) console.log(`물건 ${id} 위치 업데이트 성공: (${x}, ${y})`);
+          else console.error(`물건 ${id} 위치 업데이트 실패: ${data.error}`);
+        })
+      }
 
       // 물건 추가 팝업에서 확인 버튼 클릭
       confirmAddPinBtn.addEventListener('click', () => {
@@ -777,6 +796,7 @@
         const id = Date.now().toString();
 
         const newPin = { id, name, emoji, color, comment: '', x, y };
+        reportPosition(x, y);
         pins.push(newPin);
         createPin(x, y, newPin);
         renderPinList();
@@ -859,6 +879,7 @@
         domPin.style.top = pinData.y + 'px';
         domPin.style.backgroundColor = pinData.color;
         domPin.textContent = pinData.emoji;
+        reportPosition(pinData.x, pinData.y);
       }
 
       // 히스토리 추가
