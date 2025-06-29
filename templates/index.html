@@ -447,6 +447,54 @@
     #cancelBtn:hover {
       background-color: #616161;
     }
+
+  #toggleSidebarBtn:hover {
+    background-color: #ffa726;
+  }
+
+  /* 사이드바 접힌 상태 */
+  .sidebar-collapsed #sidebar {
+    display: none;
+  }
+
+  .sidebar-collapsed #floorplan-container {
+    flex: 1;
+  }
+#toggleSidebarBtn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 3000;
+  background: #ffb74d;
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 22px;
+  font-weight: bold;
+  color: #3e2723;
+  cursor: pointer;
+  box-sizing: border-box;
+  line-height: 36px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: left 0.3s ease, background-color 0.3s ease;
+}
+
+#mainApp.sidebar-visible #toggleSidebarBtn {
+  /* 사이드바가 320px이니깐,
+     버튼을 사이드바 오른쪽 끝에 붙이려면 320 - 36 - 8 (여유) = 276px */
+  left: 276px;
+}
+
+#mainApp.sidebar-collapsed #toggleSidebarBtn {
+  left: 16px;
+}
+
+#toggleSidebarBtn:hover {
+  background-color: #ffa726;
+}
   </style>
 </head>
 
@@ -466,7 +514,10 @@
   </div>
 
   <!-- 메인 화면 -->
+ 
+
   <div id="mainApp">
+     <button id="toggleSidebarBtn">☰</button>
     <div id="sidebar">
       <h2>🏠 집</h2>
       <div id="tabMenu">
@@ -564,32 +615,66 @@
       }
 
       // 화면 초기화
+      function init() {
+  startScreen.style.display = 'block';
+  mainApp.style.display = 'none';
+  mainApp.classList.add('sidebar-visible');
+}
+
       init();
+      const sidebar = document.getElementById('sidebar');
+    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+
+toggleSidebarBtn.addEventListener('click', () => {
+  const isVisible = window.getComputedStyle(sidebar).display !== 'none';
+  if (isVisible) {
+    sidebar.style.display = 'none';
+  } else {
+    sidebar.style.display = 'flex';
+  }
+
+  mainApp.classList.toggle('sidebar-visible', !isVisible);
+  mainApp.classList.toggle('sidebar-collapsed', isVisible);
+});
+
+
 
       // 업로드 시
-      uploadBtn.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        const placeName = placeNameInput.value.trim();
-        if (!placeName) {
-          alert('장소 이름을 입력해주세요!');
-          uploadBtn.value = ''; // 초기화
-          return;
-        }
-        if (!file) {
-          alert('사진을 선택해주세요!');
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          floorplan.src = event.target.result;
-          // 화면 전환
-          startScreen.style.display = 'none';
-          mainApp.style.display = 'flex';
+    uploadBtn.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const placeName = placeNameInput.value.trim();
+  if (!placeName) {
+    alert('장소 이름을 입력해주세요!');
+    uploadBtn.value = ''; // 초기화
+    return;
+  }
+  if (!file) {
+    alert('사진을 선택해주세요!');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    floorplan.src = event.target.result;
+    // 화면 전환
+    startScreen.style.display = 'none';
+    mainApp.style.display = 'flex';
 
-          document.title = `콕집어 - ${placeName}`;
-        };
-        reader.readAsDataURL(file);
-      });
+    document.title = `콕집어 - ${placeName}`;
+
+    // 사이드바 상단 제목 변경
+    const sidebarTitle = document.getElementById('sidebarTitle');
+    if (sidebarTitle) {
+      sidebarTitle.textContent = `${placeName}`;
+    } else {
+      // id가 없으면 대체로 첫번째 h2 요소를 찾아 변경
+      const sidebarH2 = document.querySelector('#sidebar h2');
+      if (sidebarH2) {
+        sidebarH2.textContent = ` ${placeName}`;
+      }
+    }
+  };
+  reader.readAsDataURL(file);
+});
 
       // 탭 전환
       tabButtons.forEach(btn => {
@@ -828,6 +913,7 @@
       renderPinList();
       renderHistory();
     })();
+    
   </script>
 </body>
 
