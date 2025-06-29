@@ -3,11 +3,20 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>콕집어 도면 편집기</title>
+  <title>콕집어</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    @font-face {
+      font-family: 'Pretendard-Regular';
+      src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+      font-weight: 400;
+      font-style: normal;
+    }
     * {
       box-sizing: border-box;
+    }
+    :root {
+      --brand-color: #FFB74D;
     }
 
     body,
@@ -15,8 +24,8 @@
       margin: 0;
       padding: 0;
       height: 100vh;
-      font-family: 'Arial', sans-serif;
-      background: #222;
+      font-family: 'Pretendard-Regular', sans-serif;
+      background: #fff;
       color: #333;
       user-select: none;
     }
@@ -38,9 +47,9 @@
 
     #startScreen h1 {
       margin-bottom: 20px;
-      font-size: 28px;
-      font-weight: 700;
-      color: #ff8c00;
+      font-size: 35px;
+      font-weight: 800;
+      color: black;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -50,39 +59,49 @@
     #startScreen h1 svg {
       width: 26px;
       height: 26px;
-      fill: #ff8c00;
+      fill: var(--brand-color);
     }
 
     #placeNameInput {
+      background-color: #F0F0F0;
       width: 100%;
       padding: 10px 14px;
       font-size: 16px;
-      border: 1.5px solid #ddd;
-      border-radius: 8px;
+      border: none;
+      border-radius: 20px;
       margin-bottom: 20px;
       transition: border-color 0.3s;
+      height: 50px;
     }
 
     #placeNameInput:focus {
-      border-color: #ff8c00;
+      border-color: var(--brand-color);
       outline: none;
     }
 
     #uploadBtn {
+      display: none;
+    }
+
+    #uploadLabel {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       width: 100%;
+      height: 50px;
       padding: 12px 0;
       font-size: 16px;
-      background: #ffb74d;
+      background: var(--brand-color);
       border: none;
-      border-radius: 8px;
+      border-radius: 20px;
       color: white;
       font-weight: 700;
       cursor: pointer;
       transition: background-color 0.3s;
     }
 
-    #uploadBtn:hover {
-      background: #ffa726;
+    #uploadLabel:hover {
+      background: var(--brand-color);
     }
 
     /* 메인 화면 전체 컨테이너 */
@@ -99,7 +118,7 @@
     /* 사이드바 (물건 리스트, 히스토리 등) */
     #sidebar {
       width: 320px;
-      background: #ffb74d;
+      background: var(--brand-color);
       display: flex;
       flex-direction: column;
       padding: 16px 20px;
@@ -303,6 +322,24 @@
       user-select: none;
       z-index: 10;
     }
+    .pin:after {
+      content: attr(data-name);
+      font-size: 15px;
+      font-weight: 300;
+      position: absolute;
+      top: 120%;
+      left: calc(50% - 13px);
+      display: block;
+      padding: 4px 8px;
+      text-align: center;
+      border-radius: 5px;
+      opacity: 0;
+      transition: 0.5s;
+    }
+
+    .pin:hover::after {
+      opacity: 1;
+    }
 
     .pin.dragging {
       cursor: grabbing;
@@ -455,20 +492,21 @@
   <!-- 시작 화면 -->
   <div id="startScreen">
     <h1>
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <img src="images/logo.png" width="32px" height="40px">
         <path
           d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
       </svg>
       콕집어
     </h1>
     <input type="text" id="placeNameInput" placeholder="장소 이름 입력" />
+    <label for="uploadBtn" id="uploadLabel">사진 업로드</label>
     <input type="file" id="uploadBtn" accept="image/*" />
   </div>
 
   <!-- 메인 화면 -->
   <div id="mainApp">
     <div id="sidebar">
-      <h2>🏠 집</h2>
+      <!-- <h2>🏠 집</h2> -->
       <div id="tabMenu">
         <div class="tabButton active" data-tab="pinList">물건 리스트</div>
         <div class="tabButton" data-tab="historyList">이동 히스토리</div>
@@ -587,9 +625,17 @@
           mainApp.style.display = 'flex';
 
           document.title = `콕집어 - ${placeName}`;
+          if(mainApp.style.display == 'flex'){
+            const sidebar = document.querySelector('#sidebar');
+            const h2 = document.createElement('h2');
+            h2.textContent = placeNameInput.value;
+            const tabmenu = document.querySelector('#tabMenu');
+            sidebar.insertBefore(h2, tabmenu);
+          }
         };
         reader.readAsDataURL(file);
       });
+
 
       // 탭 전환
       tabButtons.forEach(btn => {
@@ -645,6 +691,14 @@
         pin.style.backgroundColor = pinData.color || '#ff8c00';
         pin.textContent = pinData.emoji || '📌';
         pin.dataset.id = pinData.id;
+        pin.dataset.name = pinData.name;
+        pin.dataset.color = pinData.color;
+        const style = document.createElement('style');
+        style.textContent = `
+          .pin[data-id="${pinData.id}"]::after {
+            background-color: ${pinData.color};
+        }`;
+        document.head.appendChild(style);
 
         // 드래그 시작 위치
         let offsetX, offsetY;
