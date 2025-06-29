@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>콕집어 도면 편집기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --brand-color: #FFB74D;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: 'Pretendard-Regular', 'Arial', sans-serif;
+            background: #fff8e1;
+            color: #333;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* 시작 화면 */
+        #startScreen {
+            width: 400px;
+            background: white;
+            border-radius: 12px;
+            padding: 30px 25px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            user-select: text;
+        }
+
+        #startScreen h1 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--brand-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #startScreen h1 svg {
+            width: 26px;
+            height: 26px;
+            fill: var(--brand-color);
+        }
+
+        #placeNameInput {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 16px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        #placeNameInput:focus {
+            border-color: var(--brand-color);
+            outline: none;
+        }
+
+        #uploadBtn {
+            width: 100%;
+            padding: 12px 0;
+            font-size: 16px;
+            background: var(--brand-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #uploadBtn:hover {
+            background: #ffa726;
+        }
+
+        /* 메인 화면 틀 */
+        #mainApp {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #mainApp.sidebar-visible #sidebar {
+            display: flex;
+        }
+
+        #mainApp.sidebar-collapsed #sidebar {
+            display: none;
+        }
+
+        /* 사이드바 */
+        #sidebar {
+            width: 320px;
+            background: var(--brand-color);
+            display: flex;
+            flex-direction: column;
+            padding: 16px 20px;
+            gap: 10px;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            user-select: text;
+        }
+
+        #sidebar h2 {
+            margin: 0 0 10px;
+            font-weight: 700;
+            font-size: 20px;
+            color: #3e2723;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #sidebar h2 svg {
+            width: 18px;
+            height: 18px;
+            fill: #3e2723;
+        }
+
+        /* 탭 메뉴 */
+        #tabMenu {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tabButton {
+            flex: 1;
+            padding: 8px 0;
+            background: #fff3e0;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 14px;
+            color: #6d4c41;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: background-color 0.3s, border-color 0.3s;
+            user-select: none;
+        }
+
+        .tabButton.active {
+            background: white;
+            border-color: #ff8c00;
+            color: #e65100;
+        }
+
+        /* 버튼 그룹 */
+        #actionButtons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .actionBtn {
+            flex: 1;
+            padding: 10px 0;
+            background: #ffa726;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            user-select: none;
+        }
+
+        .actionBtn:hover {
+            background: #fb8c00;
+        }
+
+        .actionBtn:disabled {
+            background: #ffd180;
+            cursor: default;
+        }
+
+        /* 리스트 컨테이너 */
+        #pinList,
+        #historyList {
+            flex: 1;
+            overflow-y: auto;
+            background: #fff3e0;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+            font-size: 14px;
+            color: #5d4037;
+        }
+
+        /* 도면 컨테이너 */
+        #floorplan-container {
+            flex: 1;
+            position: relative;
+            background: white;
+            border-left: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        #floorplan {
+            max-width: 100%;
+            max-height: 100%;
+            transition: transform 0.2s ease-out;
+            transform-origin: 0 0;
+        }
+
+        /* 핀, 팝업, 모달 스타일은 다음 파트에서… */
+
+        /* 사이드바 토글 버튼 */
+        #toggleSidebarBtn {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 3000;
+            background: var(--brand-color);
+            border: none;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #3e2723;
+            cursor: pointer;
+            line-height: 36px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s, background-color 0.3s;
+        }
+
+        #toggleSidebarBtn:hover {
+            background: #ffa726;
+        }
+
+        #mainApp.sidebar-visible #toggleSidebarBtn {
+            left: 276px;
+        }
+
+        .pin {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #ff8c00;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            border: 2.5px solid white;
+            box-shadow: 0 0 7px rgba(255, 140, 0, 0.7);
+            transition: box-shadow 0.2s;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .pin.dragging {
+            cursor: grabbing;
+            box-shadow: 0 0 14px 4px rgba(255, 140, 0, 0.9);
+            z-index: 9999;
+        }
+
+        .pin::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: 120%;
+            /* 위쪽에 뜨도록 */
+            left: 50%;
+            /* 가로 중앙 정렬 */
+            transform: translateX(-50%);
+            display: block;
+            padding: 4px 8px;
+            font-size: 15px;
+            font-weight: 300;
+            text-align: center;
+            border-radius: 5px;
+            background-color: white;
+            color: black;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            /* 줄바꿈 방지 */
+            pointer-events: none;
+            /* 호버 간섭 방지 */
+            z-index: 20;
+        }
+
+        .pin:hover::after {
+            opacity: 1;
+        }
+
+        /* 물건 추가 팝업 */
+        #addPinPopup {
+            position: absolute;
+            background: #fff3e0;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            padding: 15px 18px;
+            width: 220px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            user-select: none;
+        }
+
+        #addPinPopup input[type="text"],
+        #addPinPopup select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1.5px solid #e0a500;
+            font-size: 15px;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        #addPinPopup button {
+            background: #ff8c00;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 10px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            user-select: none;
+        }
+
+        #addPinPopup button:hover {
+            background: #e65100;
+        }
+
+        /* 편집 모달 */
+        #editModal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            width: 350px;
+            display: none;
+            flex-direction: column;
+            z-index: 2000;
+            user-select: none;
+        }
+
+        #editModal input,
+        #editModal select,
+        #editModal textarea {
+            width: 100%;
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-family: inherit;
+            outline: none;
+        }
+
+        #editModal textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        #editModalButtons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #editModalButtons button {
+            flex: 1;
+            margin: 0 6px;
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s;
+        }
+
+        #savePinBtn {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        #savePinBtn:hover {
+            background-color: #388e3c;
+        }
+
+        #deletePinBtn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #deletePinBtn:hover {
+            background-color: #d32f2f;
+        }
+
+        #cancelBtn {
+            background-color: #9e9e9e;
+            color: white;
+        }
+
+        #cancelBtn:hover {
+            background-color: #616161;
+        }
+
+        body.moving-mode .pin:hover::after {
+            opacity: 0 !important;
+        }
+
+        .pinItem {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            /* 행들 사이 간격 */
+            padding: 6px 0;
+            /* 위아래 여유 */
+        }
+
+        /* 첫 줄: 이모지·이름·색상 */
+        .pinRow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 두 번째 줄: 코멘트 */
+        .pinComment {
+            margin-left: 28px;
+            /* 이모지 크기만큼 약간 들여쓰기 */
+            font-size: 13px;
+            color: #5d4037;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            /* 코멘트 길면 말줄임하고 싶으면 추가 CSS 필요 */
+        }
+
+        .pinColor {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: none;
+            border: none;
+            color: #3e2723;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background-color .2s;
+            z-index: 3001;
+        }
+
+        .back-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 시작 화면 -->
+    <div id="startScreen">
+        <h1>
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+            </svg>
+            콕집어
+        </h1>
+        <input type="text" id="placeNameInput" placeholder="장소 이름 입력" />
+        <input type="file" id="uploadBtn" accept="image/*" />
+    </div>
+
+    <!-- 메인 화면 -->
+    <!-- 메인 화면 -->
+    <div id="mainApp" class="sidebar-visible">
+        <button id="goBackBtn" class="back-btn">← 뒤로가기</button>
+
+        <button id="toggleSidebarBtn">☰</button>
+
+        <div id="sidebar">
+            <h2 id="sidebarTitle">🏠 집</h2>
+            <div id="tabMenu">
+                <div class="tabButton active" data-tab="pinList">물건 리스트</div>
+                <div class="tabButton" data-tab="historyList">이동 히스토리</div>
+            </div>
+            <div id="actionButtons">
+                <button id="movePinBtn" class="actionBtn">물건 옮기기</button>
+                <button id="addPinBtn" class="actionBtn">물건 추가</button>
+            </div>
+            <div id="pinList"></div>
+            <div id="historyList" style="display:none;"></div>
+        </div>
+        <!-- end of #sidebar -->
+
+        <div id="floorplan-container">
+            <img id="floorplan" src="" alt="도면 이미지" draggable="false" />
+            <div id="addPinPopup">
+                <input type="text" id="newPinName" placeholder="물건 이름" />
+                <input type="text" id="newPinEmoji" list="emojiList" placeholder="이모지 (예: 📌)" />
+                <select id="newPinColor">
+                    <option value="#ff8c00">주황</option>
+                    <option value="#f44336">빨강</option>
+                    <option value="#4caf50">초록</option>
+                    <option value="#2196f3">파랑</option>
+                    <option value="#9c27b0">보라</option>
+                    <option value="#ffeb3b">노랑</option>
+                </select>
+                <button id="confirmAddPinBtn">추가</button>
+            </div>
+        </div>
+        <!-- end of #floorplan-container -->
+
+    </div><!-- end of #mainApp -->
+
+
+    <!-- 편집 모달 -->
+    <div id="editModal">
+        <input type="text" id="editPinName" placeholder="물건 이름" />
+        <input type="text" id="editPinEmoji" list="emojiList" placeholder="이모지 (예: 📌)" />
+        <textarea id="editPinComment" placeholder="코멘트"></textarea>
+        <select id="editPinColor">
+            <option value="#ff8c00">주황</option>
+            <option value="#f44336">빨강</option>
+            <option value="#4caf50">초록</option>
+            <option value="#2196f3">파랑</option>
+            <option value="#9c27b0">보라</option>
+            <option value="#ffeb3b">노랑</option>
+        </select>
+        <div id="editModalButtons">
+            <button id="savePinBtn">저장</button>
+            <button id="deletePinBtn">삭제</button>
+            <button id="cancelBtn">취소</button>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // 참조 요소
+            const goBackBtn = document.getElementById('goBackBtn');
+            const startScreen = document.getElementById('startScreen');
+            const placeNameInput = document.getElementById('placeNameInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const mainApp = document.getElementById('mainApp');
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+            const floorplan = document.getElementById('floorplan');
+            const floorplanContainer = document.getElementById('floorplan-container');
+            const addPinBtn = document.getElementById('addPinBtn');
+            const movePinBtn = document.getElementById('movePinBtn');
+            const tabButtons = document.querySelectorAll('.tabButton');
+            const pinListDiv = document.getElementById('pinList');
+            const historyListDiv = document.getElementById('historyList');
+            const addPinPopup = document.getElementById('addPinPopup');
+            const confirmAddPinBtn = document.getElementById('confirmAddPinBtn');
+            const newPinNameInput = document.getElementById('newPinName');
+            const newPinEmojiInput = document.getElementById('newPinEmoji');
+            const newPinColorSelect = document.getElementById('newPinColor');
+            const editModal = document.getElementById('editModal');
+            const editPinName = document.getElementById('editPinName');
+            const editPinEmoji = document.getElementById('editPinEmoji');
+            const editPinComment = document.getElementById('editPinComment');
+            const editPinColor = document.getElementById('editPinColor');
+            const savePinBtn = document.getElementById('savePinBtn');
+            const deletePinBtn = document.getElementById('deletePinBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            let pins = [];
+            let history = [];
+            let selectedPin = null;
+            let isMovingPin = false;
+
+            // 1. 업로드 모드용 초기화 함수
+            function initUpload() {
+                startScreen.style.display = 'block';
+                mainApp.style.display = 'none';
+                goBackBtn.style.display = 'none';            // ← 업로드 모드에선 숨기기
+
+            }
+            // 2. 에디터 모드용 초기화 함수
+            function initEditor(placeId) {
+                startScreen.style.display = 'none';
+                mainApp.style.display = 'flex';
+                goBackBtn.style.display = 'inline-block';   // ← 에디터 모드에선 보이기
+                // 타이틀 세팅
+                const name = localStorage.getItem('placeName');
+                document.title = `콕집어 - ${name}`;
+                document.getElementById('sidebarTitle').textContent = name;
+                // 이미지 · 핀 · 히스토리 불러오기
+                fetch(`/api/places/${placeId}`)
+                    .then(r => r.json())
+                    .then(p => floorplan.src = p.image_url);
+                fetch(`/api/places/${placeId}/pins`)
+                    .then(r => r.json())
+                    .then(p => { pins = p; renderPinList(); });
+                fetch(`/api/places/${placeId}/history`)
+                    .then(r => r.json())
+                    .then(h => { history = h; renderHistory(); });
+            }
+
+            document.getElementById('goBackBtn').addEventListener('click', () => {
+                // 로컬 저장소에 저장된 place 정보 삭제
+                localStorage.removeItem('placeId');
+                localStorage.removeItem('placeName');
+                // 화면 전환
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('startScreen').style.display = 'block';
+            });
+
+            // 3. 분기: placeId 유무에 따라 업로드/에디터 초기화
+
+
+            // 새로운 업로드/에디터 분기 로직
+            const savedId = localStorage.getItem('placeId');
+            if (savedId) {
+                initEditor(savedId);
+            } else {
+                initUpload();
+            }
+
+
+            // 사이드바 토글
+            toggleSidebarBtn.addEventListener('click', () => {
+                const visible = window.getComputedStyle(sidebar).display !== 'none';
+                mainApp.classList.toggle('sidebar-collapsed', visible);
+                mainApp.classList.toggle('sidebar-visible', !visible);
+            });
+
+            // 업로드 이벤트
+            // (새로)
+            uploadBtn.addEventListener('change', e => {
+                const file = e.target.files[0];
+                const name = placeNameInput.value.trim();
+                if (!name || !file) {
+                    alert('이름과 사진을 모두 입력하세요');
+                    uploadBtn.value = '';
+                    return;
+                }
+                const form = new FormData();
+                form.append('name', name);
+                form.append('image', file);
+
+                fetch('/api/places', {
+                    method: 'POST',
+                    body: form
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        // placeId, placeName 저장
+                        localStorage.setItem('placeId', data._id);
+                        localStorage.setItem('placeName', name);
+                        // 에디터 모드로 전환
+                        initEditor(data._id);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('장소 생성에 실패했습니다.');
+                    });
+            });
+            // 탭 전환
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (btn.dataset.tab === 'pinList') {
+                        pinListDiv.style.display = 'block';
+                        historyListDiv.style.display = 'none';
+                    } else {
+                        pinListDiv.style.display = 'none';
+                        historyListDiv.style.display = 'block';
+                    }
+                });
+            });
+
+            // 물건 리스트 렌더링
+            // …기존 스크립트 아래에 renderPinList 함수 교체…
+            function renderPinList() {
+                pinListDiv.innerHTML = '';
+                pins.forEach(pin => {
+                    const item = document.createElement('div');
+                    item.className = 'pinItem';
+                    item.dataset.id = pin.id;
+                    item.innerHTML = `
+                        <div class="pinRow">
+                            <div class="pinEmoji">${pin.emoji || '📌'}</div>
+                            <div class="pinName">${pin.name}</div>
+                            <div class="pinColor" style="background:${pin.color};"></div>
+                        </div>
+                        <div class="pinComment">${pin.comment || ''}</div>
+                    `;
+                    item.addEventListener('click', () => openEditModal(pin));
+                    pinListDiv.appendChild(item);
+                });
+            }
+
+            // 히스토리 렌더링
+            function renderHistory() {
+                historyListDiv.innerHTML = '';
+                history.forEach(h => {
+                    const item = document.createElement('div');
+                    item.className = 'historyItem';
+                    item.textContent = `[${new Date(h.time).toLocaleString()}] ${h.text}`;
+                    historyListDiv.appendChild(item);
+                });
+            }
+
+            // 핀 생성 함수
+            function createPin(x, y, pinData) {
+                const pin = document.createElement('div');
+                pin.className = 'pin';
+                pin.style.left = `${x}px`;
+                pin.style.top = `${y}px`;
+                pin.style.backgroundColor = pinData.color || '#ff8c00';
+                pin.textContent = pinData.emoji || '📌';
+                pin.dataset.id = pinData.id;
+                pin.dataset.name = pinData.name;
+
+                let offsetX, offsetY, dragging = false;
+
+                pin.addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (!isMovingPin) {
+                        openEditModal(pinData);
+                    }
+                });
+
+                pin.addEventListener('mousedown', e => {
+                    if (!isMovingPin) return;
+                    dragging = true;
+                    offsetX = e.clientX - pin.offsetLeft;
+                    offsetY = e.clientY - pin.offsetTop;
+                    pin.classList.add('dragging');
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', e => {
+                    if (!dragging) return;
+                    let newX = e.clientX - offsetX;
+                    let newY = e.clientY - offsetY;
+                    const rect = floorplanContainer.getBoundingClientRect();
+                    newX = Math.min(Math.max(0, newX), rect.width - pin.offsetWidth);
+                    newY = Math.min(Math.max(0, newY), rect.height - pin.offsetHeight);
+                    pin.style.left = `${newX}px`;
+                    pin.style.top = `${newY}px`;
+                });
+
+                document.addEventListener('mouseup', e => {
+                    if (!dragging) return;
+                    dragging = false;
+                    pin.classList.remove('dragging');
+                    const id = pin.dataset.id;
+                    const idx = pins.findIndex(p => p.id === id);
+                    if (idx !== -1) {
+                        pins[idx].x = parseInt(pin.style.left);
+                        pins[idx].y = parseInt(pin.style.top);
+                        addHistory(`물건 "${pins[idx].name}" 위치 변경됨.`);
+                        renderHistory();
+                        renderPinList();
+                    }
+                });
+
+                floorplanContainer.appendChild(pin);
+            }
+
+            // 물건 추가 버튼
+            // “물건 추가” 버튼 누르면 팝업 보이고, 다시 누르면 숨기는 토글 로직
+            addPinBtn.addEventListener('click', () => {
+                if (addPinPopup.style.display === 'flex') {
+                    // 이미 떠 있으면 숨김
+                    addPinPopup.style.display = 'none';
+                } else {
+                    // 떠 있지 않으면 보여주기
+                    addPinPopup.style.display = 'flex';
+                    // 가운데 정렬
+                    addPinPopup.style.left = (floorplanContainer.clientWidth - addPinPopup.clientWidth) / 2 + 'px';
+                    addPinPopup.style.top = (floorplanContainer.clientHeight - addPinPopup.clientHeight) / 2 + 'px';
+                    // 입력폼 초기화
+                    newPinNameInput.value = '';
+                    newPinEmojiInput.value = '';
+                    newPinColorSelect.value = '#ff8c00';
+                }
+            });
+
+            // 팝업 확정
+            confirmAddPinBtn.addEventListener('click', () => {
+                const name = newPinNameInput.value.trim();
+                const emoji = newPinEmojiInput.value.trim() || '📌';
+                const color = newPinColorSelect.value;
+                if (!name) { alert('물건 이름을 입력하세요.'); return; }
+                const x = floorplanContainer.clientWidth / 2 - 16;
+                const y = floorplanContainer.clientHeight / 2 - 16;
+                const id = Date.now().toString();
+                const newPin = { id, name, emoji, color, comment: '', x, y };
+                pins.push(newPin);
+                createPin(x, y, newPin);
+                renderPinList();
+                addPinPopup.style.display = 'none';
+                addHistory(`물건 "${name}" 추가됨.`);
+                renderHistory();
+            });
+
+            // 편집 모달 열기
+            function openEditModal(pin) {
+                selectedPin = pin;
+                editPinName.value = pin.name;
+                editPinEmoji.value = pin.emoji;
+                editPinComment.value = pin.comment;
+                editPinColor.value = pin.color;
+                editModal.style.display = 'flex';
+            }
+
+            // 모달 저장
+            savePinBtn.addEventListener('click', () => {
+                if (!selectedPin) return;
+                const name = editPinName.value.trim();
+                const emoji = editPinEmoji.value.trim() || '📌';
+                const comment = editPinComment.value.trim();
+                const color = editPinColor.value;
+                if (!name) { alert('물건 이름을 입력하세요.'); return; }
+                selectedPin.name = name;
+                selectedPin.emoji = emoji;
+                selectedPin.comment = comment;
+                selectedPin.color = color;
+                updatePinOnMap(selectedPin);
+                renderPinList();
+                addHistory(`물건 "${name}" 정보 수정됨.`);
+                renderHistory();
+                closeEditModal();
+            });
+
+            // 모달 삭제
+            deletePinBtn.addEventListener('click', () => {
+                if (!selectedPin) return;
+                if (!confirm(`정말 "${selectedPin.name}" 을 삭제할까요?`)) return;
+                pins = pins.filter(p => p.id !== selectedPin.id);
+                const dom = floorplanContainer.querySelector(`.pin[data-id="${selectedPin.id}"]`);
+                if (dom) dom.remove();
+                renderPinList();
+                addHistory(`물건 "${selectedPin.name}" 삭제됨.`);
+                renderHistory();
+                closeEditModal();
+            });
+
+            cancelBtn.addEventListener('click', closeEditModal);
+            function closeEditModal() {
+                selectedPin = null;
+                editModal.style.display = 'none';
+            }
+
+            // 화면 업데이트
+            function updatePinOnMap(pin) {
+                const dom = floorplanContainer.querySelector(`.pin[data-id="${pin.id}"]`);
+                if (!dom) return;
+                dom.style.left = pin.x + 'px';
+                dom.style.top = pin.y + 'px';
+                dom.style.backgroundColor = pin.color;
+                dom.textContent = pin.emoji;
+            }
+
+            // 히스토리 추가
+            function addHistory(text) {
+                history.unshift({ time: Date.now(), text });
+            }
+
+            // 물건 옮기기 토글
+            movePinBtn.addEventListener('click', () => {
+                isMovingPin = !isMovingPin;
+                document.body.classList.toggle('moving-mode', isMovingPin);
+                movePinBtn.textContent = isMovingPin ? '옮기기 중 (클릭하여 종료)' : '물건 옮기기';
+                floorplanContainer.style.cursor = isMovingPin ? 'grab' : 'default';
+            });
+
+            // 최초 렌더링
+            renderPinList();
+            renderHistory();
+        })();
+    </script>
+    <datalist id="emojiList">
+        <option value="📌"></option>
+        <option value="📍"></option>
+        <option value="📎"></option>
+        <option value="✏️"></option>
+        <option value="📝"></option>
+        <option value="📂"></option>
+        <option value="📁"></option>
+        <option value="📦"></option>
+        <option value="🗂️"></option>
+        <option value="🔑"></option>
+        <option value="🔒"></option>
+        <option value="💡"></option>
+        <option value="🔔"></option>
+        <option value="📷"></option>
+        <option value="🖼️"></option>
+        <option value="🛋️"></option>
+        <option value="🛏️"></option>
+        <option value="🚪"></option>
+        <option value="🪑"></option>
+        <option value="🎁"></option>
+    </datalist>
+</body>
+
+</html>
