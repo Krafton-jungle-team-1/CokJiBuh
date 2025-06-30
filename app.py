@@ -93,22 +93,30 @@ def edit_page():
 @app.route('/api/places', methods=['POST'])
 @token_required
 def create_place(user):
-    name = request.form.get('name')
-    image_file = request.files.get('image')
-    if not name or not image_file:
-        return jsonify({'error': 'Both name and image are required'}), 400
-    # Optionally clear old data per user
-    db.places.delete_many({'username': user})
-    db.pins.delete_many({'username': user})
-    db.history.delete_many({'username': user})
-    fs_files = db.fs.files.delete_many({'metadata.username': user})
-    fs_chunks = db.fs.chunks.delete_many({})
+    try:
+        name = request.form.get('name')
+        image_file = request.files.get('image')
+        if not name or not image_file:
+            print("DEBUG: name, image_file", name, image_file)
+            return jsonify({'error': 'Both name and image are required'}), 400
+        # Optionally clear old data per user
+        db.places.delete_many({'username': user})
+        db.pins.delete_many({'username': user})
+        db.history.delete_many({'username': user})
+        
+        for file in fs.find({'metadata.username': user}):
+            fs.delete(file._id)
 
-    image_id = fs.put(image_file, filename=image_file.filename,
-                      content_type=image_file.content_type, metadata={'username': user})
-    place = {'username': user, 'name': name, 'image_id': image_id, 'created': datetime.utcnow()}
-    res = db.places.insert_one(place)
-    return jsonify({'_id': str(res.inserted_id)}), 201
+        image_id = fs.put(image_file, filename=image_file.filename,
+                        content_type=image_file.content_type, metadata={'username': user})
+        place = {'username': user, 'name': name, 'image_id': image_id, 'created': datetime.utcnow()}
+        res = db.places.insert_one(place)
+        return jsonify({'_id': str(res.inserted_id)}), 201
+    except Exception as e:
+        import traceback
+        print('=== /api/places ERROR ===')
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/places/<place_id>', methods=['GET'])
 @token_required
@@ -265,3 +273,4 @@ def clear_last_place(user):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
