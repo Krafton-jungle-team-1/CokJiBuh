@@ -594,8 +594,9 @@
     #loginPopup {
       display: none;
       position: fixed;
-      top: 50px;
-      right: 20px;
+      top: 50%;
+      right: 50%;
+      transform: translate(50%, -50%);
       background-color: white;
       border: 1px solid #ccc;
       padding: 15px;
@@ -638,9 +639,9 @@
       flex-direction: column;
       z-index:1000;
       position:fixed; 
-      top:20%; 
+      top:50%; 
       left:50%; 
-      transform:translateX(-50%); 
+      transform:translate(-50%, -50%); 
       background:#fff;
       padding: 20px;
     }
@@ -670,7 +671,7 @@
     <button id="showRegisterBtn" type="button">회원가입</button> <!-- 회원가입 팝업 열기 버튼 추가 -->
   </div>
   <div id="backdrop"></div>
-  <div id="loginPopup" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; padding:20px; border:1px solid #ccc; z-index:1000;">
+  <div id="loginPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; border:1px solid #ccc; z-index:1000;">
     <h3>로그인</h3>  
     <input type="text" id="usernameInput" placeholder="사용자명 입력" />
     <input type="password" id="passwordInput" placeholder="비밀번호 입력" /> <!-- 비밀번호 입력 필드 추가 -->
