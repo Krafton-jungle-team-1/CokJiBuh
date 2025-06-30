@@ -8,7 +8,7 @@
 import os
 from io import BytesIO
 from datetime import datetime
-from flask import Flask, request, jsonify, send_file, abort, send_from_directory,redirect
+from flask import Flask, request, jsonify, send_file, abort, send_from_directory
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 from bson import ObjectId
@@ -22,16 +22,10 @@ app = Flask(__name__)
 CORS(app)
 
 @app.route("/")
-def root():
-    place = db.places.find_one(sort=[("created", -1)])
-    if place:
-        return redirect(f"/edit?placeId={str(place['_id'])}")
-    else:
-        return redirect("/edit")
+def index():
+    return send_from_directory("static", "index.html")
 
-@app.route('/edit')
-def edit_page():
-    return send_from_directory('static', 'index22.html')
+
 
 # MongoDB configuration
 MONGO_URI = os.environ["MONGO_URI"]
@@ -43,6 +37,48 @@ db = mongo.db
 fs = gridfs.GridFS(db)
 
 # ----- Place endpoints -----
+
+@app.route("/items/<itemId>/move", methods=["POST"])
+def move_item(itemId):
+    data = request.get_json()
+    if not data or "newX" not in data or "newY" not in data:
+        return jsonify({"error": "Missing 'newX' or 'newY'"}), 400
+
+    entry = {
+        "itemId": itemId,  # URL의 itemId를 씀
+        "newX": data["newX"],
+        "newY": data["newY"],
+        "movedAt": datetime.utcnow()
+    }
+    result = db.changeLocation.insert_one(entry)
+    return jsonify({"success": True, "id": str(result.inserted_id)}), 201
+
+@app.route('/api/last_place', methods=['PUT'])
+def set_last_place():
+    data = request.get_json()
+    place_id = data.get('placeId')
+    place_name = data.get('placeName')
+    db.settings.update_one(
+        {"_id": "last_place"},
+        {"$set": {"place_id": place_id, "place_name": place_name}},
+        upsert=True
+    )
+    return jsonify({"message": "saved"})
+
+@app.route('/api/last_place', methods=['GET'])
+def get_last_place():
+    s = db.settings.find_one({"_id": "last_place"})
+    return jsonify({
+        "placeId": s.get("place_id") if s else None,
+        "placeName": s.get("place_name") if s else None
+    })
+
+@app.route('/api/last_place', methods=['DELETE'])
+def clear_last_place():
+    db.settings.delete_one({"_id": "last_place"})
+    return jsonify({"message": "cleared"})
+
+
 @app.route("/api/places", methods=["POST"])
 def create_place():
     # Expecting a multipart/form-data request with 'name' and file 'image'
@@ -51,11 +87,6 @@ def create_place():
     if not name or not image:
         return jsonify({"error": "Both 'name' and image file are required"}), 400
 
-    db.places.delete_many({})
-    db.fs.files.delete_many({})
-    db.fs.chunks.delete_many({})
-    db.pins.delete_many({})
-    
     # Save image into GridFS
     image_id = fs.put(image, filename=image.filename, content_type=image.content_type)
     place_doc = {"name": name, "image_id": image_id, "created": datetime.utcnow()}
@@ -209,7 +240,7 @@ def create_history(place_id):
     entry["pin_id"] = data["pin_id"]
     return jsonify(entry), 201
 
-# —— Run server ——
+# ----- Run server -----
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
