@@ -1016,9 +1016,11 @@
             await loadHistory();
           } else {
             alert(data.error || '장소 생성 실패');
+            loading.style.display = 'none';
           }
         } catch {
           alert('서버 연결 실패');
+          loading.style.display = 'none';
         }
       });
     
