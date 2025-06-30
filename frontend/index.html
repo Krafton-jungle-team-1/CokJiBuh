@@ -324,11 +324,14 @@
     }
     .pin:after {
       content: attr(data-name);
+      white-space: nowrap;
+      color: black;
       font-size: 15px;
       font-weight: 300;
       position: absolute;
       top: 120%;
-      left: calc(50% - 13px);
+      left: 50%;
+      transform: translateX(-50%);
       display: block;
       padding: 4px 8px;
       text-align: center;
@@ -484,6 +487,54 @@
     #cancelBtn:hover {
       background-color: #616161;
     }
+    
+    #toggleSidebarBtn:hover {
+      background-color: #ffa726;
+    }
+
+    /* 사이드바 접힌 상태 */
+    .sidebar-collapsed #sidebar {
+      display: none;
+    }
+
+    .sidebar-collapsed #floorplan-container {
+      flex: 1;
+    }
+  #toggleSidebarBtn {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 3000;
+    background: #ffb74d;
+    border: none;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    font-size: 22px;
+    font-weight: bold;
+    color: #3e2723;
+    cursor: pointer;
+    box-sizing: border-box;
+    line-height: 36px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: left 0.3s ease, background-color 0.3s ease;
+  }
+
+  #mainApp.sidebar-visible #toggleSidebarBtn {
+    /* 사이드바가 320px이니깐,
+      버튼을 사이드바 오른쪽 끝에 붙이려면 320 - 36 - 8 (여유) = 276px */
+    left: 276px;
+  }
+
+  #mainApp.sidebar-collapsed #toggleSidebarBtn {
+    left: 16px;
+  }
+
+  #toggleSidebarBtn:hover {
+    background-color: #ffa726;
+  }
   </style>
 </head>
 
@@ -505,6 +556,7 @@
 
   <!-- 메인 화면 -->
   <div id="mainApp">
+    <button id="toggleSidebarBtn">☰</button>
     <div id="sidebar">
       <!-- <h2>🏠 집</h2> -->
       <div id="tabMenu">
@@ -599,10 +651,25 @@
       function init() {
         startScreen.style.display = 'block';
         mainApp.style.display = 'none';
+        mainApp.classList.add('sidebar-visible');
       }
 
       // 화면 초기화
       init();
+      const sidebar = document.getElementById('sidebar');
+      const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+
+      toggleSidebarBtn.addEventListener('click', () => {
+        const isVisible = window.getComputedStyle(sidebar).display !== 'none';
+        if (isVisible) {
+          sidebar.style.display = 'none';
+        } else {
+          sidebar.style.display = 'flex';
+        }
+
+        mainApp.classList.toggle('sidebar-visible', !isVisible);
+        mainApp.classList.toggle('sidebar-collapsed', isVisible);
+      });
 
       // 업로드 시
       uploadBtn.addEventListener('change', (e) => {
@@ -759,13 +826,14 @@
         newPinColorSelect.value = '#ff8c00';
       });
       
-      function reportPosition(x, y){
+      function reportPosition(id, x, y){
         fetch(`/items/${id}/move`, {
           method: 'post',
           headers: {
             'Content-Type': 'application/json' 
           },
           body: JSON.stringify({
+            id: id,
             newX: x,
             newY: y,
           })
@@ -796,7 +864,7 @@
         const id = Date.now().toString();
 
         const newPin = { id, name, emoji, color, comment: '', x, y };
-        reportPosition(x, y);
+        reportPosition(newPin.id, x, y);
         pins.push(newPin);
         createPin(x, y, newPin);
         renderPinList();
@@ -879,7 +947,7 @@
         domPin.style.top = pinData.y + 'px';
         domPin.style.backgroundColor = pinData.color;
         domPin.textContent = pinData.emoji;
-        reportPosition(pinData.x, pinData.y);
+        reportPosition(pinData.id, pinData.x, pinData.y);
       }
 
       // 히스토리 추가
