@@ -535,6 +535,34 @@
   #toggleSidebarBtn:hover {
     background-color: #ffa726;
   }
+
+  #loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+  }
+  #loading h2 {
+      color: #FFB74D;
+      margin-bottom: 30px;
+  }
+  #loading svg {
+      width: 100px;
+      height: 100px;
+      animation: ani 3s linear infinite;
+  }
+  @keyframes ani {
+      0% {
+          transform: rotate(0deg);
+      }
+      100% {
+          transform: rotate(360deg);
+      }
+  }
   </style>
 </head>
 
@@ -543,7 +571,7 @@
   <!-- 시작 화면 -->
   <div id="startScreen">
     <h1>
-      <img src="images/logo.png" width="32px" height="40px">
+      <img src="logo.png" width="32px" height="40px">
         <path
           d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
       </svg>
@@ -552,6 +580,14 @@
     <input type="text" id="placeNameInput" placeholder="장소 이름 입력" />
     <label for="uploadBtn" id="uploadLabel">사진 업로드</label>
     <input type="file" id="uploadBtn" accept="image/*" />
+  </div>
+
+  <!-- 로딩 화면 -->
+  <div id="loading">
+    <h2>Loading...</h2>
+    <svg width="139" height="130" viewBox="0 0 139 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M109 20H120L139 60H122V130H17V60H0L16.5 20H89V0H109V20ZM29 88V100H42V88H29ZM47 88V100H59V88H47ZM29 83H42V70H29V83ZM47 83H59V70H47V83Z" fill="#FFB74D"/>
+    </svg>            
   </div>
 
   <!-- 메인 화면 -->
@@ -649,9 +685,41 @@
 
       // 초기 화면 설정
       function init() {
-        startScreen.style.display = 'block';
-        mainApp.style.display = 'none';
-        mainApp.classList.add('sidebar-visible');
+        const placeName = localStorage.getItem('placeName');
+        const image = localStorage.getItem('image');
+        const sidebar = document.querySelector('#sidebar');
+        const loadingScreen = document.querySelector('#loading');
+        if(placeName && image) {
+          loadingScreen.style.display = 'block';
+          startScreen.style.display = 'none';
+          mainApp.style.display = 'none';
+
+          floorplan.src = image;
+
+          floorplan.onload = () =>{
+            loadingScreen.style.display = 'none';
+            mainApp.style.display = 'flex';
+            const sidebarStyle = window.getComputedStyle(sidebar);
+            if (sidebarStyle.display !== 'none') {
+              mainApp.classList.add('sidebar-visible');
+              mainApp.classList.remove('sidebar-collapsed');
+            } else {
+              mainApp.classList.remove('sidebar-visible');
+              mainApp.classList.add('sidebar-collapsed');
+            }
+            document.title = `콕집어 - ${placeName}`;
+            const h2 = document.createElement('h2');
+            h2.textContent = placeName;
+            const tabmenu = document.querySelector('#tabMenu');
+            sidebar.insertBefore(h2, tabmenu);
+          }
+        }
+        else {
+          startScreen.style.display = 'block';
+          mainApp.style.display = 'none';
+          loadingScreen.style.display = 'none';
+          mainApp.classList.add('sidebar-visible');
+        }
       }
 
       // 화면 초기화
@@ -686,7 +754,10 @@
         }
         const reader = new FileReader();
         reader.onload = (event) => {
-          floorplan.src = event.target.result;
+          const imageData = event.target.result;
+          localStorage.setItem('placeName', placeName);
+          localStorage.setItem('image', imageData);
+          floorplan.src = imageData;
           // 화면 전환
           startScreen.style.display = 'none';
           mainApp.style.display = 'flex';

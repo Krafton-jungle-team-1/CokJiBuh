@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #loading h2 {
+            color: #FFB74D;
+            margin-bottom: 30px;
+        }
+        #loading svg {
+            width: 100px;
+            height: 100px;
+            animation: ani 3s linear infinite;
+        }
+        @keyframes ani {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <h2>Loading...</h2>
+        <svg width="139" height="130" viewBox="0 0 139 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M109 20H120L139 60H122V130H17V60H0L16.5 20H89V0H109V20ZM29 88V100H42V88H29ZM47 88V100H59V88H47ZM29 83H42V70H29V83ZM47 83H59V70H47V83Z" fill="#FFB74D"/>
+        </svg>            
+    </div>
+</body>
+</html>
