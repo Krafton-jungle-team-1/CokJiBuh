@@ -500,27 +500,27 @@
     .sidebar-collapsed #floorplan-container {
       flex: 1;
     }
-  #toggleSidebarBtn {
-    position: fixed;
-    top: 16px;
-    left: 16px;
-    z-index: 3000;
-    background: #ffb74d;
-    border: none;
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    font-size: 22px;
-    font-weight: bold;
-    color: #3e2723;
-    cursor: pointer;
-    box-sizing: border-box;
-    line-height: 36px;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    transition: left 0.3s ease, background-color 0.3s ease;
-  }
+    #toggleSidebarBtn {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 3000;
+      background: #ffb74d;
+      border: none;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      font-size: 22px;
+      font-weight: bold;
+      color: #3e2723;
+      cursor: pointer;
+      box-sizing: border-box;
+      line-height: 36px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: left 0.3s ease, background-color 0.3s ease;
+    }
 
   #mainApp.sidebar-visible #toggleSidebarBtn {
     /* 사이드바가 320px이니깐,
@@ -692,7 +692,7 @@
   <!-- 시작 화면 -->
   <div id="startScreen">
     <h1>
-      <img src="static/logo.png" width="32px" height="40px">
+      <img src="logo.png" width="32px" height="40px">
         <path
           d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
       </svg>
@@ -701,6 +701,14 @@
     <input type="text" id="placeNameInput" placeholder="장소 이름 입력" />
     <label for="uploadBtn" id="uploadLabel">사진 업로드</label>
     <input type="file" id="uploadBtn" accept="image/*" />
+  </div>
+
+  <!-- 로딩 화면 -->
+  <div id="loading">
+      <h2>Loading...</h2>
+      <svg width="139" height="130" viewBox="0 0 139 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M109 20H120L139 60H122V130H17V60H0L16.5 20H89V0H109V20ZM29 88V100H42V88H29ZM47 88V100H59V88H47ZM29 83H42V70H29V83ZM47 83H59V70H47V83Z" fill="#FFB74D"/>
+      </svg>            
   </div>
 
   <!-- 메인 화면 -->
@@ -827,7 +835,7 @@
         loginBtn.textContent = `${currentUser} 님 (로그아웃)`;
         loginPopup.style.display = 'none';
         registerPopup.style.display = 'none';
-        loading.style.display ; 'none';
+        loading.style.display = 'none';
       }
       function setLoggedOut() {
         currentUser = null;
@@ -848,6 +856,9 @@
         mainApp.style.display = 'none';
         loading.style.display = 'none';
         mainApp.classList.add('sidebar-visible');
+        console.log('startScreen', startScreen);
+        console.log('mainApp', mainApp);
+        console.log('loading', loading);
       }
       init();
     
@@ -1283,7 +1294,6 @@
     
     })();
     </script>
-  </script>
 </body>
 
 </html>
