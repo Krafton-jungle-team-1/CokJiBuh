@@ -902,6 +902,7 @@
           } else {
             alert(data.error || '로그인 실패');
           }
+          backdrop.style.display = 'none';
         } catch {
           alert('서버 연결 오류');
         }
@@ -949,6 +950,7 @@
             registerMsg.style.color = 'red';
             registerMsg.textContent = data.error || '회원가입 실패';
           }
+          backdrop.style.display = 'none';
         } catch {
           registerMsg.style.color = 'red';
           registerMsg.textContent = '서버 연결 실패';
