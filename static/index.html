@@ -535,10 +535,159 @@
   #toggleSidebarBtn:hover {
     background-color: #ffa726;
   }
+
+  #loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+  }
+  #loading h2 {
+      color: #FFB74D;
+      margin-bottom: 30px;
+  }
+  #loading svg {
+      width: 100px;
+      height: 100px;
+      animation: ani 3s linear infinite;
+  }
+  @keyframes ani {
+      0% {
+          transform: rotate(0deg);
+      }
+      100% {
+          transform: rotate(360deg);
+      }
+  }
+
+    /* 우측 상단 로그인 버튼 */
+    #loginContainer {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+    }
+    #loginBtn, #showRegisterBtn {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color:#ffb74d;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 998;
+      margin: 5px;
+    }
+    #backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.4); /* ← 검정색 반투명 */
+      z-index: 999; /* loginPopup보다 낮게! */
+      display: none;
+    }
+    #loginPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      right: 50%;
+      transform: translate(50%, -50%);
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 15px;
+      width: 220px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      z-index: 1001;
+    }
+    #loginPopup input {
+      width: 100%;
+      margin-top: 5px;
+      border: none;
+      background-color: #F0F0F0;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    #loginPopup button {
+      width: 100%;
+      padding: 8px;
+      background-color: #ffb74d;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    #mainContainer {
+      width: 100%;
+      height: 100%;
+      background-color: #f8f8f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #registerPopup {
+      display: none;
+      z-index: 1000;
+      border-radius: 8px;
+      flex-direction: column;
+      z-index:1000;
+      position:fixed; 
+      top:50%; 
+      left:50%; 
+      transform:translate(-50%, -50%); 
+      background:#fff;
+      padding: 20px;
+    }
+    #registerPopup input {
+      margin-top: 5px;
+      border: none;
+      background-color: #F0F0F0;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    #registerPopup button {
+      margin-top: 5px;
+      background-color: var(--brand-color);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
+  <!-- 로그인 화면 -->
+  <div id="loginContainer">
+    <button id="loginBtn" type="button">로그인</button>
+    <button id="showRegisterBtn" type="button">회원가입</button> <!-- 회원가입 팝업 열기 버튼 추가 -->
+  </div>
+  <div id="backdrop"></div>
+  <div id="loginPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; border:1px solid #ccc; z-index:1000;">
+    <h3>로그인</h3>  
+    <input type="text" id="usernameInput" placeholder="사용자명 입력" />
+    <input type="password" id="passwordInput" placeholder="비밀번호 입력" /> <!-- 비밀번호 입력 필드 추가 -->
+    <button id="loginConfirmBtn" type="button">확인</button>
+    <button id="loginCloseBtn" type="button">닫기</button> <!-- 팝업 닫기 버튼 추가 -->
+  </div>
+  
+  <div id="registerPopup">
+    <h3>회원가입</h3>
+    <input type="text" id="regUsername" placeholder="사용자명" />  
+    <input type="password" id="regPassword" placeholder="비밀번호" />
+    <input type="password" id="regPasswordConfirm" placeholder="비밀번호 확인" />
+    <button id="registerBtn" type="button">회원가입</button>
+    <button id="registerCloseBtn" type="button">닫기</button>
+    <div id="registerMsg" style="color:red; margin-top:10px;"></div>
+  </div>
 
   <!-- 시작 화면 -->
   <div id="startScreen">
@@ -612,27 +761,32 @@
 
   <script>
     (() => {
+      // --- 상태 변수 ---
+      let currentUser = null;
+      let authToken = null;
+      let currentPlaceId = null;
+      let pins = [];
+      let history = [];
+      let selectedPin = null;
+      let isMovingPin = false;
+    
+      // --- DOM 요소 ---
       const startScreen = document.getElementById('startScreen');
       const placeNameInput = document.getElementById('placeNameInput');
       const uploadBtn = document.getElementById('uploadBtn');
-
       const mainApp = document.getElementById('mainApp');
       const floorplan = document.getElementById('floorplan');
       const floorplanContainer = document.getElementById('floorplan-container');
-
       const addPinBtn = document.getElementById('addPinBtn');
       const movePinBtn = document.getElementById('movePinBtn');
-
       const tabButtons = document.querySelectorAll('.tabButton');
       const pinListDiv = document.getElementById('pinList');
       const historyListDiv = document.getElementById('historyList');
-
       const addPinPopup = document.getElementById('addPinPopup');
       const newPinNameInput = document.getElementById('newPinName');
       const newPinEmojiInput = document.getElementById('newPinEmoji');
       const newPinColorSelect = document.getElementById('newPinColor');
       const confirmAddPinBtn = document.getElementById('confirmAddPinBtn');
-
       const editModal = document.getElementById('editModal');
       const editPinName = document.getElementById('editPinName');
       const editPinEmoji = document.getElementById('editPinEmoji');
@@ -641,85 +795,327 @@
       const savePinBtn = document.getElementById('savePinBtn');
       const deletePinBtn = document.getElementById('deletePinBtn');
       const cancelBtn = document.getElementById('cancelBtn');
-
-      let pins = [];
-      let history = [];
-      let selectedPin = null;
-      let isMovingPin = false;
-
-      // 초기 화면 설정
+      const loginBtn = document.getElementById('loginBtn');
+      const loginCloseBtn = document.getElementById('loginCloseBtn');
+      const loginPopup = document.getElementById('loginPopup');
+      const loginConfirmBtn = document.getElementById('loginConfirmBtn');
+      const usernameInput = document.getElementById('usernameInput');
+      const passwordInput = document.getElementById('passwordInput');
+      const showRegisterBtn = document.getElementById('showRegisterBtn');
+      const registerPopup = document.getElementById('registerPopup');
+      const registerCloseBtn = document.getElementById('registerCloseBtn');
+      const registerBtn = document.getElementById('registerBtn');
+      const regUsernameInput = document.getElementById('regUsername');
+      const regPasswordInput = document.getElementById('regPassword');
+      const regPasswordConfirmInput = document.getElementById('regPasswordConfirm');
+      const registerMsg = document.getElementById('registerMsg');
+      const loading = document.getElementById('loading');
+      const backdrop = document.getElementById('backdrop');
+    
+      // --- 로그인/회원가입을 위한 API 호출 래퍼 ---
+      function apiFetch(url, options = {}) {
+        options.headers = options.headers || {};
+        if (authToken) {
+          options.headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        return fetch(url, options);
+      }
+    
+      // --- 로그인 상태 UI 처리 ---
+      function setLoggedIn(user) {
+        currentUser = user;
+        loginBtn.textContent = `${currentUser} 님 (로그아웃)`;
+        loginPopup.style.display = 'none';
+        registerPopup.style.display = 'none';
+        loading.style.display ; 'none';
+      }
+      function setLoggedOut() {
+        currentUser = null;
+        authToken = null;
+        currentPlaceId = null;
+        pins = [];
+        history = [];
+        loginBtn.textContent = '로그인';
+        init(); // 다시 시작 화면으로
+        clearPinsFromMap();
+        renderPinList();
+        renderHistory();
+      }
+    
+      // --- 초기 화면/앱 화면 토글 ---
       function init() {
         startScreen.style.display = 'block';
         mainApp.style.display = 'none';
+        loading.style.display = 'none';
         mainApp.classList.add('sidebar-visible');
       }
-
-      // 화면 초기화
       init();
-      const sidebar = document.getElementById('sidebar');
-      const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-
-      toggleSidebarBtn.addEventListener('click', () => {
-        const isVisible = window.getComputedStyle(sidebar).display !== 'none';
-        if (isVisible) {
-          sidebar.style.display = 'none';
+    
+      // --- 로그인 버튼 클릭 핸들러 ---
+      loginBtn.addEventListener('click', () => {
+        if (authToken) {
+          if (confirm('로그아웃 하시겠습니까?')) setLoggedOut();
         } else {
-          sidebar.style.display = 'flex';
+          loginPopup.style.display = 'block';
+          backdrop.style.display = 'block';
+          registerPopup.style.display = 'none';
         }
-
-        mainApp.classList.toggle('sidebar-visible', !isVisible);
-        mainApp.classList.toggle('sidebar-collapsed', isVisible);
       });
 
-      // 업로드 시
-      uploadBtn.addEventListener('change', (e) => {
+      loginCloseBtn.addEventListener('click', () => {
+        loginPopup.style.display = 'none';
+        backdrop.style.display = 'none';
+        usernameInput.value = '';
+        passwordInput.value = '';
+      })
+    
+      // --- 로그인 제출 ---
+      loginConfirmBtn.addEventListener('click', async () => {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+        if (!username || !password) {
+          alert('아이디와 비밀번호를 모두 입력해주세요.');
+          return;
+        }
+        try {
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (res.ok && data.token) {
+            authToken = data.token;
+            setLoggedIn(username);
+            alert(`환영합니다, ${username}님!`);
+          } else {
+            alert(data.error || '로그인 실패');
+          }
+        } catch {
+          alert('서버 연결 오류');
+        }
+      });
+    
+      // --- 회원가입 팝업 열기/닫기 ---
+      showRegisterBtn.addEventListener('click', () => {
+        registerPopup.style.display = 'flex';
+        backdrop.style.display= 'block';
+        loginPopup.style.display = 'none';
+        registerMsg.textContent = '';
+      });
+      registerCloseBtn.addEventListener('click', () => {
+        registerPopup.style.display = 'none';
+        backdrop.style.display= 'none';
+        registerMsg.textContent = '';
+      });
+    
+      // --- 회원가입 제출 ---
+      registerBtn.addEventListener('click', async () => {
+        const username = regUsernameInput.value.trim();
+        const password = regPasswordInput.value;
+        const passwordConfirm = regPasswordConfirmInput.value;
+        if (!username || !password || !passwordConfirm) {
+          registerMsg.style.color = 'red';
+          registerMsg.textContent = '모든 항목을 입력해주세요.';
+          return;
+        }
+        if (password !== passwordConfirm) {
+          registerMsg.style.color = 'red';
+          registerMsg.textContent = '비밀번호가 일치하지 않습니다.';
+          return;
+        }
+        try {
+          const res = await fetch('/api/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            registerMsg.style.color = 'green';
+            registerMsg.textContent = '회원가입 성공! 로그인해주세요.';
+          } else {
+            registerMsg.style.color = 'red';
+            registerMsg.textContent = data.error || '회원가입 실패';
+          }
+        } catch {
+          registerMsg.style.color = 'red';
+          registerMsg.textContent = '서버 연결 실패';
+        }
+      });
+    
+      // --- 장소 업로드 (POST /api/places) ---
+      uploadBtn.addEventListener('change', async (e) => {
+        if (!authToken) {
+          alert('로그인 후 이용해주세요.');
+          uploadBtn.value = '';
+          return;
+        }
         const file = e.target.files[0];
         const placeName = placeNameInput.value.trim();
         if (!placeName) {
           alert('장소 이름을 입력해주세요!');
-          uploadBtn.value = ''; // 초기화
+          uploadBtn.value = '';
           return;
         }
         if (!file) {
           alert('사진을 선택해주세요!');
           return;
         }
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          floorplan.src = event.target.result;
-          // 화면 전환
-          startScreen.style.display = 'none';
-          mainApp.style.display = 'flex';
+        try {
+          const formData = new FormData();
+          formData.append('name', placeName);
+          formData.append('image', file);
+          loading.style.display = 'flex';
+          const res = await apiFetch('/api/places', {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (res.ok && data._id) {
+            currentPlaceId = data._id;
+            // loading.style.display = 'flex';
+            floorplan.onload = async () => {
+              // 이미지가 화면에 다 뜬 뒤 실행됨
+              loading.style.display = 'none';
+              startScreen.style.display = 'none';
+              mainApp.style.display = 'flex';
 
-          document.title = `콕집어 - ${placeName}`;
-          if(mainApp.style.display == 'flex'){
-            const sidebar = document.querySelector('#sidebar');
+              document.title = `콕집어 - ${placeName}`;
+              const h2 = document.createElement('h2');
+              h2.textContent = placeName;
+              const tabmenu = document.querySelector('#tabMenu');
+              document.querySelector('#sidebar').insertBefore(h2, tabmenu);
+
+              await loadPins();
+              await loadHistory();
+            };
+            floorplan.src = URL.createObjectURL(file);
+            startScreen.style.display = 'none';
+            mainApp.style.display = 'flex';
+            document.title = `콕집어 - ${placeName}`;
             const h2 = document.createElement('h2');
-            h2.textContent = placeNameInput.value;
+            h2.textContent = placeName;
             const tabmenu = document.querySelector('#tabMenu');
-            sidebar.insertBefore(h2, tabmenu);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-
-
-      // 탭 전환
-      tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          tabButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          if (btn.dataset.tab === 'pinList') {
-            pinListDiv.style.display = 'block';
-            historyListDiv.style.display = 'none';
+            document.querySelector('#sidebar').insertBefore(h2, tabmenu);
+    
+            await loadPins();
+            await loadHistory();
           } else {
-            pinListDiv.style.display = 'none';
-            historyListDiv.style.display = 'block';
+            alert(data.error || '장소 생성 실패');
+          }
+        } catch {
+          alert('서버 연결 실패');
+        }
+      });
+    
+      // --- 핀 목록 불러오기 ---
+      async function loadPins() {
+        if (!currentPlaceId) return;
+        try {
+          const res = await apiFetch(`/api/places/${currentPlaceId}/pins`);
+          const arr = await res.json();
+          if (res.ok) {
+            pins = arr.map(p => ({
+              id: p._id, name: p.name, emoji: p.emoji,
+              color: p.color, x: p.x, y: p.y, comment: p.comment
+            }));
+            clearPinsFromMap();
+            pins.forEach(p => createPin(p.x, p.y, p));
+            renderPinList();
+          }
+        } catch {
+          alert('핀 데이터를 불러오는 중 오류');
+        }
+      }
+    
+      // --- 히스토리 불러오기 ---
+      async function loadHistory() {
+        if (!currentPlaceId) return;
+        try {
+          const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
+          const arr = await res.json();
+          if (res.ok) {
+            history = arr.map(h => ({
+              time: new Date(h.time).getTime(),
+              text: `물건 위치가 변경되었습니다.`
+            }));
+            renderHistory();
+          }
+        } catch {
+          alert('히스토리 불러오기 실패');
+        }
+      }
+    
+      // --- 핀 화면에서 모두 지우기 ---
+      function clearPinsFromMap() {
+        floorplanContainer.querySelectorAll('.pin').forEach(el => el.remove());
+      }
+    
+      // --- 핀 생성 & 드래그/저장 로직 ---
+      function createPin(x, y, pinData) {
+        const pin = document.createElement('div');
+        pin.className = 'pin';
+        pin.style.left = `${x}px`;
+        pin.style.top = `${y}px`;
+        pin.style.backgroundColor = pinData.color || '#ff8c00';
+        pin.textContent = pinData.emoji || '📌';
+        pin.dataset.id = pinData.id;
+    
+        let offsetX, offsetY, dragging = false;
+    
+        pin.addEventListener('mousedown', e => {
+          if (!isMovingPin) return;
+          dragging = true;
+          offsetX = e.clientX - pin.offsetLeft;
+          offsetY = e.clientY - pin.offsetTop;
+          pin.classList.add('dragging');
+          e.preventDefault();
+        });
+        document.addEventListener('mousemove', e => {
+          if (!dragging) return;
+          let newX = e.clientX - offsetX;
+          let newY = e.clientY - offsetY;
+          const rect = floorplanContainer.getBoundingClientRect();
+          newX = Math.min(Math.max(0, newX), rect.width - pin.offsetWidth);
+          newY = Math.min(Math.max(0, newY), rect.height - pin.offsetHeight);
+          pin.style.left = `${newX}px`;
+          pin.style.top = `${newY}px`;
+        });
+        document.addEventListener('mouseup', async e => {
+          if (!dragging) return;
+          dragging = false;
+          pin.classList.remove('dragging');
+          const id = pin.dataset.id;
+          const idx = pins.findIndex(p => p.id === id);
+          if (idx === -1) return;
+          pins[idx].x = parseInt(pin.style.left);
+          pins[idx].y = parseInt(pin.style.top);
+          try {
+            // 핀 위치 수정 API
+            await apiFetch(`/api/pins/${id}`, {
+              method: 'PUT',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ x: pins[idx].x, y: pins[idx].y })
+            });
+            // 히스토리 생성 API
+            await apiFetch(`/api/places/${currentPlaceId}/history`, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
+            });
+            addHistory(`물건 "${pins[idx].name}" 위치 변경됨.`);
+            renderHistory();
+            renderPinList();
+          } catch {
+            alert('위치 저장 실패');
           }
         });
-      });
-
-      // 물건 리스트 업데이트
+    
+        floorplanContainer.appendChild(pin);
+      }
+    
+      // --- 물건 리스트 렌더링 ---
       function renderPinList() {
         pinListDiv.innerHTML = '';
         pins.forEach(pin => {
@@ -727,18 +1123,15 @@
           div.className = 'pinItem';
           div.dataset.id = pin.id;
           div.innerHTML = `
-            <div class="pinEmoji">${pin.emoji || '📌'}</div>
+            <div class="pinEmoji">${pin.emoji||'📌'}</div>
             <div class="pinName">${pin.name}</div>
-            <div class="pinStatus">${pin.comment ? '코멘트 있음' : ''}</div>
-          `;
-          div.addEventListener('click', () => {
-            openEditModal(pin);
-          });
+            <div class="pinStatus">${pin.comment ? '코멘트 있음':''}</div>`;
+          div.addEventListener('click', () => openEditModal(pin));
           pinListDiv.appendChild(div);
         });
       }
-
-      // 히스토리 리스트 업데이트
+    
+      // --- 히스토리 렌더링 ---
       function renderHistory() {
         historyListDiv.innerHTML = '';
         history.forEach(h => {
@@ -748,229 +1141,148 @@
           historyListDiv.appendChild(div);
         });
       }
-
-      // 핀 생성
-      function createPin(x, y, pinData) {
-        const pin = document.createElement('div');
-        pin.className = 'pin';
-        pin.style.left = `${x}px`;
-        pin.style.top = `${y}px`;
-        pin.style.backgroundColor = pinData.color || '#ff8c00';
-        pin.textContent = pinData.emoji || '📌';
-        pin.dataset.id = pinData.id;
-        pin.dataset.name = pinData.name;
-        pin.dataset.color = pinData.color;
-        const style = document.createElement('style');
-        style.textContent = `
-          .pin[data-id="${pinData.id}"]::after {
-            background-color: ${pinData.color};
-        }`;
-        document.head.appendChild(style);
-
-        // 드래그 시작 위치
-        let offsetX, offsetY;
-        let dragging = false;
-
-        pin.addEventListener('mousedown', (e) => {
-          if (!isMovingPin) return;
-          dragging = true;
-          offsetX = e.clientX - pin.offsetLeft;
-          offsetY = e.clientY - pin.offsetTop;
-          pin.classList.add('dragging');
-          e.preventDefault();
-        });
-
-        document.addEventListener('mousemove', (e) => {
-          if (!dragging) return;
-          let newX = e.clientX - offsetX;
-          let newY = e.clientY - offsetY;
-
-          // 컨테이너 내부 좌표 제한
-          const rect = floorplanContainer.getBoundingClientRect();
-          newX = Math.min(Math.max(0, newX), rect.width - pin.offsetWidth);
-          newY = Math.min(Math.max(0, newY), rect.height - pin.offsetHeight);
-
-          pin.style.left = `${newX}px`;
-          pin.style.top = `${newY}px`;
-        });
-
-        document.addEventListener('mouseup', (e) => {
-          if (!dragging) return;
-          dragging = false;
-          pin.classList.remove('dragging');
-
-          // 위치 업데이트 저장
-          const id = pin.dataset.id;
-          const idx = pins.findIndex(p => p.id === id);
-          if (idx !== -1) {
-            pins[idx].x = parseInt(pin.style.left);
-            pins[idx].y = parseInt(pin.style.top);
-            addHistory(`물건 "${pins[idx].name}" 위치 변경됨.`);
-            renderHistory();
-            renderPinList();
-          }
-        });
-
-        floorplanContainer.appendChild(pin);
-      }
-
-      // 물건 추가 버튼 클릭
+    
+      // --- 물건 추가 팝업 & API 호출 ---
       addPinBtn.addEventListener('click', () => {
+        if (!authToken) { alert('로그인 후 이용해주세요.'); return; }
         addPinPopup.style.display = 'flex';
-        // 중앙에 띄우기 (floorplan 컨테이너 기준)
-        addPinPopup.style.left = (floorplanContainer.clientWidth / 2 - addPinPopup.clientWidth / 2) + 'px';
-        addPinPopup.style.top = (floorplanContainer.clientHeight / 2 - addPinPopup.clientHeight / 2) + 'px';
-
+        addPinPopup.style.left = (floorplanContainer.clientWidth/2 - addPinPopup.clientWidth/2) + 'px';
+        addPinPopup.style.top = (floorplanContainer.clientHeight/2 - addPinPopup.clientHeight/2) + 'px';
         newPinNameInput.value = '';
         newPinEmojiInput.value = '';
         newPinColorSelect.value = '#ff8c00';
       });
-      
-      function reportPosition(id, x, y){
-        fetch(`/items/${id}/move`, {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json' 
-          },
-          body: JSON.stringify({
-            id: id,
-            newX: x,
-            newY: y,
-          })
-        },
-        )
-        .then(response => response.json())
-        .then(data => {
-          if(data.success) console.log(`물건 ${id} 위치 업데이트 성공: (${x}, ${y})`);
-          else console.error(`물건 ${id} 위치 업데이트 실패: ${data.error}`);
-        })
-      }
-
-      // 물건 추가 팝업에서 확인 버튼 클릭
-      confirmAddPinBtn.addEventListener('click', () => {
+      confirmAddPinBtn.addEventListener('click', async () => {
         const name = newPinNameInput.value.trim();
-        const emoji = newPinEmojiInput.value.trim() || '📌';
+        const emoji = newPinEmojiInput.value.trim() || '';
         const color = newPinColorSelect.value;
-
-        if (!name) {
-          alert('물건 이름을 입력하세요.');
-          return;
+        if (!name) { alert('물건 이름을 입력하세요.'); return; }
+        if (!currentPlaceId) { alert('장소가 선택되지 않았습니다.'); return; }
+        const x = floorplanContainer.clientWidth/2 - 16;
+        const y = floorplanContainer.clientHeight/2 - 16;
+        try {
+          const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name, emoji, color, x, y })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            const p = { id: data._id, name:data.name, emoji:data.emoji, color:data.color, x:data.x, y:data.y, comment:data.comment };
+            pins.push(p);
+            createPin(p.x, p.y, p);
+            renderPinList();
+            addPinPopup.style.display = 'none';
+            addHistory(`물건 "${name}" 추가됨.`);
+            renderHistory();
+          } else {
+            alert(data.error||'추가 실패');
+          }
+        } catch {
+          alert('서버 오류');
         }
-
-        // 기본 위치 중앙 (floorplan 중앙)
-        const x = floorplanContainer.clientWidth / 2 - 16;
-        const y = floorplanContainer.clientHeight / 2 - 16;
-
-        const id = Date.now().toString();
-
-        const newPin = { id, name, emoji, color, comment: '', x, y };
-        reportPosition(newPin.id, x, y);
-        pins.push(newPin);
-        createPin(x, y, newPin);
-        renderPinList();
-        addPinPopup.style.display = 'none';
-        addHistory(`물건 "${name}" 추가됨.`);
-        renderHistory();
       });
-
-      // 편집 모달 열기
+    
+      // --- 편집 모달 열기/저장/삭제 ---
       function openEditModal(pin) {
         selectedPin = pin;
         editPinName.value = pin.name;
-        editPinEmoji.value = pin.emoji || '';
-        editPinComment.value = pin.comment || '';
-        editPinColor.value = pin.color || '#ff8c00';
+        editPinEmoji.value = pin.emoji||'';
+        editPinComment.value = pin.comment||'';
+        editPinColor.value = pin.color||'#ff8c00';
         editModal.style.display = 'flex';
       }
-
-      // 편집 모달 저장
-      savePinBtn.addEventListener('click', () => {
+      savePinBtn.addEventListener('click', async () => {
         if (!selectedPin) return;
         const name = editPinName.value.trim();
-        const emoji = editPinEmoji.value.trim() || '📌';
+        const emoji = editPinEmoji.value.trim()||'';
         const comment = editPinComment.value.trim();
         const color = editPinColor.value;
-
-        if (!name) {
-          alert('물건 이름을 입력하세요.');
-          return;
+        if (!name) { alert('물건 이름을 입력하세요.'); return; }
+        try {
+          const res = await apiFetch(`/api/pins/${selectedPin.id}`, {
+            method:'PUT',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ name, emoji, comment, color })
+          });
+          if (res.ok) {
+            Object.assign(selectedPin, { name, emoji, comment, color });
+            updatePinOnMap(selectedPin);
+            renderPinList();
+            addHistory(`물건 "${name}" 정보 수정됨.`);
+            renderHistory();
+            closeEditModal();
+          } else {
+            const err = await res.json();
+            alert(err.error||'수정 실패');
+          }
+        } catch {
+          alert('서버 연결 실패');
         }
-
-        selectedPin.name = name;
-        selectedPin.emoji = emoji;
-        selectedPin.comment = comment;
-        selectedPin.color = color;
-
-        // 화면 업데이트
-        updatePinOnMap(selectedPin);
-        renderPinList();
-        addHistory(`물건 "${name}" 정보 수정됨.`);
-        renderHistory();
-        closeEditModal();
       });
-
-      // 편집 모달 삭제
-      deletePinBtn.addEventListener('click', () => {
+      deletePinBtn.addEventListener('click', async () => {
         if (!selectedPin) return;
-        if (!confirm(`정말 "${selectedPin.name}" 을(를) 삭제하시겠습니까?`)) return;
-
-        // 핀 제거
-        const idx = pins.findIndex(p => p.id === selectedPin.id);
-        if (idx !== -1) {
-          pins.splice(idx, 1);
+        if (!confirm(`정말 "${selectedPin.name}" 삭제?`)) return;
+        try {
+          const res = await apiFetch(`/api/pins/${selectedPin.id}`, { method:'DELETE' });
+          if (res.ok) {
+            pins = pins.filter(p=>p.id!==selectedPin.id);
+            document.querySelector(`.pin[data-id="${selectedPin.id}"]`)?.remove();
+            renderPinList();
+            addHistory(`물건 "${selectedPin.name}" 삭제됨.`);
+            renderHistory();
+            closeEditModal();
+          } else {
+            const err = await res.json();
+            alert(err.error||'삭제 실패');
+          }
+        } catch {
+          alert('서버 오류');
         }
-
-        // 화면에서 제거
-        const domPin = floorplanContainer.querySelector(`.pin[data-id="${selectedPin.id}"]`);
-        if (domPin) domPin.remove();
-
-        renderPinList();
-        addHistory(`물건 "${selectedPin.name}" 삭제됨.`);
-        renderHistory();
-        closeEditModal();
       });
-
-      cancelBtn.addEventListener('click', () => {
-        closeEditModal();
-      });
-
+      cancelBtn.addEventListener('click', closeEditModal);
       function closeEditModal() {
         selectedPin = null;
         editModal.style.display = 'none';
       }
-
-      // 화면 핀 업데이트
-      function updatePinOnMap(pinData) {
-        const domPin = floorplanContainer.querySelector(`.pin[data-id="${pinData.id}"]`);
-        if (!domPin) return;
-        domPin.style.left = pinData.x + 'px';
-        domPin.style.top = pinData.y + 'px';
-        domPin.style.backgroundColor = pinData.color;
-        domPin.textContent = pinData.emoji;
-        reportPosition(pinData.id, pinData.x, pinData.y);
+      function updatePinOnMap(pin) {
+        const el = floorplanContainer.querySelector(`.pin[data-id="${pin.id}"]`);
+        if (!el) return;
+        el.style.left = pin.x + 'px';
+        el.style.top = pin.y + 'px';
+        el.style.backgroundColor = pin.color;
+        el.textContent = pin.emoji;
       }
-
-      // 히스토리 추가
+    
+      // --- 히스토리 로컬 추가 ---
       function addHistory(text) {
         history.unshift({ time: Date.now(), text });
       }
-
-      // 물건 옮기기 버튼 클릭 토글
+    
+      // --- 물건 옮기기 토글 ---
       movePinBtn.addEventListener('click', () => {
         isMovingPin = !isMovingPin;
         movePinBtn.textContent = isMovingPin ? '옮기기 중 (클릭하여 종료)' : '물건 옮기기';
-        if (!isMovingPin) {
-          // 마우스 커서 기본으로
-          floorplanContainer.style.cursor = 'default';
-        } else {
-          floorplanContainer.style.cursor = 'grab';
-        }
+        floorplanContainer.style.cursor = isMovingPin ? 'grab' : 'default';
       });
-
-      // 초기 렌더링 (없음)
-      renderPinList();
-      renderHistory();
+    
+      // --- 탭 전환 ---
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabButtons.forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          if (btn.dataset.tab==='pinList') {
+            pinListDiv.style.display='block';
+            historyListDiv.style.display='none';
+          } else {
+            pinListDiv.style.display='none';
+            historyListDiv.style.display='block';
+          }
+        });
+      });
+    
     })();
+    </script>
   </script>
 </body>
 
