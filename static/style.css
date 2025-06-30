@@ -614,6 +614,11 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
+  }
+  #loginConfirmBtn {
+    margin-top: 15px;
+  }
+  #loginCloseBtn{
     margin-top: 5px;
   }
   #mainContainer {
@@ -645,11 +650,16 @@
     border-radius: 10px;
   }
   #registerPopup button {
-    margin-top: 5px;
     background-color: var(--brand-color);
     color: white;
     border: none;
     border-radius: 10px;
     padding: 10px;
     cursor: pointer;
+  }
+  #registerBtn {
+    margin-top: 15px;
+  }
+  #registerCloseBtn {
+    margin-top: 5px;
   }
