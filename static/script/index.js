@@ -403,7 +403,12 @@
         div.innerHTML = `
           <div class="pinEmoji">${pin.emoji||'📌'}</div>
           <div class="pinName">${pin.name}</div>`;
-        div.addEventListener('click', (e) => markHistory(pin));
+        div.addEventListener('click', (e) => {
+          const siblings = e.currentTarget.parentNode.querySelectorAll('.pinItem');
+          siblings.forEach(el => el.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          markHistory(pin)
+        });
         historyListDiv.appendChild(div);
       });
       // history.forEach(h => {
@@ -416,7 +421,6 @@
 
     function markHistory(pin){
       document.querySelectorAll('.pinHistory').forEach(el => el.remove());
-      e.currentTarget.classList.add('active');
       const index = pins.indexOf(pin);
       const pinElementHistory = history[index];
       if (!pinElementHistory || pinElementHistory.length === 0) {
@@ -430,6 +434,7 @@
         pin.style.top = `${h.y}px`;
         pin.style.backgroundColor = pinData.color || '#ff8c00';
         pin.textContent = pinData.emoji || '📌';
+        floorplanContainer.appendChild(pin);
       })
     }
   
