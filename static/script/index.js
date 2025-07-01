@@ -415,7 +415,7 @@
     function markHistory(pin){
       document.querySelectorAll('.pinHistory').forEach(el => el.remove());
       const index = pins.indexOf(pin);
-      const pinElementHistory = history[index];
+      const pinElementHistory = myHistory[index];
       if (!pinElementHistory || pinElementHistory.length === 0) {
         return;
       }
@@ -547,7 +547,7 @@
   
     // --- 히스토리 로컬 추가 ---
     function addHistory(text) {
-      history.unshift({ time: Date.now(), text });
+      myHistory.unshift({ time: Date.now(), text });
     }
   
     // --- 물건 옮기기 토글 ---
