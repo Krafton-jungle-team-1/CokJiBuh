@@ -422,8 +422,8 @@
         pin.dataset.id = i + 1;
         pin.style.left = `${h.x}px`;
         pin.style.top = `${h.y}px`;
-        pin.style.backgroundColor = pinData.color || '#ff8c00';
-        pin.textContent = pinData.emoji || '📌';
+        pin.style.backgroundColor = pin.color || '#ff8c00';
+        pin.textContent = pin.emoji || '📌';
         floorplanContainer.appendChild(pin);
       })
     }
