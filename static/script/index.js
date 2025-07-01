@@ -4,10 +4,10 @@
     let authToken = null;
     let currentPlaceId = null;
     let pins = [];
-    let history = [];
+    let myHistory = [];
     let selectedPin = null;
     let isMovingPin = false;
-  
+
     // --- DOM 요소 ---
     const startScreen = document.getElementById('startScreen');
     const placeNameInput = document.getElementById('placeNameInput');
@@ -49,7 +49,8 @@
     const registerMsg = document.getElementById('registerMsg');
     const loading = document.getElementById('loading');
     const backdrop = document.getElementById('backdrop');
-  
+
+
     // --- 로그인/회원가입을 위한 API 호출 래퍼 ---
     function apiFetch(url, options = {}) {
       options.headers = options.headers || {};
@@ -72,7 +73,7 @@
       authToken = null;
       currentPlaceId = null;
       pins = [];
-      history = [];
+      myHistory = [];
       loginBtn.textContent = '로그인';
       init(); // 다시 시작 화면으로
       clearPinsFromMap();
@@ -234,16 +235,6 @@
             await loadHistory();
           };
           floorplan.src = URL.createObjectURL(file);
-          startScreen.style.display = 'none';
-          mainApp.style.display = 'flex';
-          document.title = `콕집어 - ${placeName}`;
-          const h2 = document.createElement('h2');
-          h2.textContent = placeName;
-          const tabmenu = document.querySelector('#tabMenu');
-          document.querySelector('#sidebar').insertBefore(h2, tabmenu);
-  
-          await loadPins();
-          await loadHistory();
         } else {
           alert(data.error || '장소 생성 실패');
           loading.style.display = 'none';
@@ -260,6 +251,7 @@
       try {
         const res = await apiFetch(`/api/places/${currentPlaceId}/pins`);
         const arr = await res.json();
+        console.log("핀 목록 불러옴", arr);
         if (res.ok) {
           pins = arr.map(p => ({
             id: p._id, name: p.name, emoji: p.emoji,
@@ -277,16 +269,34 @@
     // --- 히스토리 불러오기 ---
     async function loadHistory() {
       if (!currentPlaceId) return;
+      myHistory = [];
+      // try {
+      //   const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
+      //   const arr = await res.json();
+      //   if (res.ok) {
+      //     history = arr.map(h => ({
+      //       time: new Date(h.time).getTime(),
+      //       text: `물건 위치가 변경되었습니다.`
+      //     }));
+      //     renderHistory();
+      //   }
+      // } catch {
+      //   alert('히스토리 불러오기 실패');
+      // }
       try {
-        const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
-        const arr = await res.json();
-        if (res.ok) {
-          history = arr.map(h => ({
-            time: new Date(h.time).getTime(),
-            text: `물건 위치가 변경되었습니다.`
-          }));
-          renderHistory();
+        for (const pin of pins) {
+          const res = await apiFetch(`/items/${pin.id}/move`);
+          const arr = await res.json();
+          arr.sort((a, b) => a._id.localeCompare(b._id));
+          console.log("히스토리 목록 불러옴", arr);
+          if (res.ok) {
+            myHistory.push(arr.map(h => ({
+              x: h.newX,
+              y: h.newY,
+            })));
+          }
         }
+        renderHistory();
       } catch {
         alert('히스토리 불러오기 실패');
       }
@@ -349,7 +359,8 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
           });
-          addHistory(`물건 "${pins[idx].name}" 위치 변경됨.`);
+          console.log(`물건 "${pins[idx].name}" 위치 변경됨.`);
+          loadHistory();
           renderHistory();
           renderPinList();
         } catch {
@@ -379,12 +390,79 @@
     // --- 히스토리 렌더링 ---
     function renderHistory() {
       historyListDiv.innerHTML = '';
-      history.forEach(h => {
+      pins.forEach(pin => {
         const div = document.createElement('div');
-        div.className = 'historyItem';
-        div.textContent = `[${new Date(h.time).toLocaleString()}] ${h.text}`;
+        div.className = 'pinItem';
+        div.dataset.id = pin.id;
+        div.innerHTML = `
+          <div class="pinEmoji">${pin.emoji||'📌'}</div>
+          <div class="pinName">${pin.name}</div>`;
+        div.addEventListener('click', (e) => {
+          const siblings = e.currentTarget.parentNode.querySelectorAll('.pinItem');
+          siblings.forEach(el => el.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          markHistory(pin)
+        });
         historyListDiv.appendChild(div);
       });
+      // history.forEach(h => {
+      //   const div = document.createElement('div');
+      //   div.className = 'historyItem';
+      //   div.textContent = `[${new Date(h.time).toLocaleString()}] ${h.text}`;
+      //   historyListDiv.appendChild(div);
+      // });
+    }
+
+    function markHistory(pin){
+      document.querySelectorAll('.pinHistory').forEach(el => el.remove());
+      document.querySelectorAll('.historyLine').forEach(el => el.remove());
+
+      const index = pins.indexOf(pin);
+      const pinElementHistory = myHistory[index];
+      if (!pinElementHistory || pinElementHistory.length === 0) {
+        return;
+      }
+      // svg 요소 생성
+      let svg = document.getElementById('historyLineSvg');
+      if (!svg) {
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('id', 'historyLineSvg');
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none'; // 마우스 방해 X
+        floorplanContainer.appendChild(svg);
+      } else {
+        svg.innerHTML = ''; // 기존 선 제거
+      }
+      pinElementHistory.forEach((h, i) => {
+        const pinElement = document.createElement('div');
+        pinElement.className = 'pin pinHistory';
+        pinElement.dataset.id = i + 1;
+        pinElement.style.left = `${h.x}px`;
+        pinElement.style.top = `${h.y}px`;
+        pinElement.style.backgroundColor = pin.color || '#ff8c00';
+        pinElement.textContent = pin.emoji || '📌';
+        floorplanContainer.appendChild(pinElement);
+
+        //선 그리기, 다음 좌표가 있으면 선 생성 
+        if (i > 0) {
+          const prev = pinElementHistory[i - 1];
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', prev.x + 12); // 중심 기준 보정
+          line.setAttribute('y1', prev.y + 12);
+          line.setAttribute('x2', h.x + 12);
+          line.setAttribute('y2', h.y + 12);
+          line.setAttribute('stroke', pin.color || '#ff8c00');
+          line.setAttribute('stroke-width', '2');
+          line.classList.add('historyLine');
+          svg.appendChild(line);
+        }
+      })
+      console.log('핀 위치 렌더링 완료', pinElementHistory);
+      console.log('현재 DOM에 .pinHistory 수:', document.querySelectorAll('.pinHistory').length);
     }
   
     // --- 물건 추가 팝업 & API 호출 ---
@@ -418,7 +496,7 @@
           createPin(p.x, p.y, p);
           renderPinList();
           addPinPopup.style.display = 'none';
-          addHistory(`물건 "${name}" 추가됨.`);
+          console.log(`물건 "${name}" 추가됨.`);
           renderHistory();
         } else {
           alert(data.error||'추가 실패');
@@ -454,7 +532,7 @@
           Object.assign(selectedPin, { name, emoji, comment, color });
           updatePinOnMap(selectedPin);
           renderPinList();
-          addHistory(`물건 "${name}" 정보 수정됨.`);
+          console.log(`물건 "${name}" 정보 수정됨.`);
           renderHistory();
           closeEditModal();
         } else {
@@ -467,14 +545,14 @@
     });
     deletePinBtn.addEventListener('click', async () => {
       if (!selectedPin) return;
-      if (!confirm(`정말 "${selectedPin.name}" 삭제?`)) return;
+      if (!confirm(`정말 "${selectedPin.name}"을 삭제하시겠습니까?`)) return;
       try {
         const res = await apiFetch(`/api/pins/${selectedPin.id}`, { method:'DELETE' });
         if (res.ok) {
           pins = pins.filter(p=>p.id!==selectedPin.id);
           document.querySelector(`.pin[data-id="${selectedPin.id}"]`)?.remove();
           renderPinList();
-          addHistory(`물건 "${selectedPin.name}" 삭제됨.`);
+          console.log(`물건 "${selectedPin.name}" 삭제됨.`);
           renderHistory();
           closeEditModal();
         } else {
@@ -500,9 +578,10 @@
     }
   
     // --- 히스토리 로컬 추가 ---
-    function addHistory(text) {
-      history.unshift({ time: Date.now(), text });
-    }
+    // function addHistory(text) {
+    //   // myHistory.unshift({ time: Date.now(), text });
+
+    // }
   
     // --- 물건 옮기기 토글 ---
     movePinBtn.addEventListener('click', () => {
@@ -519,9 +598,14 @@
         if (btn.dataset.tab==='pinList') {
           pinListDiv.style.display='block';
           historyListDiv.style.display='none';
+          const pinHistoryList = document.querySelectorAll('.pinHistory');
+          pinHistoryList.forEach(el => el.remove());
+          document.querySelectorAll('.historyLine').forEach(el => el.remove());
         } else {
           pinListDiv.style.display='none';
           historyListDiv.style.display='block';
+          const settedPins = document.querySelectorAll('.pin:not(.pinHistory)');
+          settedPins.forEach(el => el.remove());
         }
       });
     });

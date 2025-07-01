@@ -218,6 +218,9 @@
     transition: background-color 0.2s;
     user-select: none;
   }
+  .pinItem.active {
+    background: #ffd180;
+  }
 
   .pinItem:hover {
     background-color: #fff8e1;
@@ -314,7 +317,7 @@
     user-select: none;
     z-index: 10;
   }
-  .pin:after {
+  .pin:not(.pinHistory):after {
     content: attr(data-name);
     white-space: nowrap;
     color: black;
@@ -332,7 +335,7 @@
     transition: 0.5s;
   }
 
-  .pin:hover::after {
+  .pin:not(.pinHistory):hover::after {
     opacity: 1;
   }
 
@@ -340,6 +343,31 @@
     cursor: grabbing;
     box-shadow: 0 0 14px 4px rgba(255, 140, 0, 0.9);
     z-index: 9999;
+  }
+
+  svg#historyLineSvg {
+    z-index: 0;
+  }
+  
+  .pin.pinHistory {
+    z-index: 1;
+  }
+
+  .pinHistory:after {
+    content: attr(data-id);
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    padding: 5px;
+    background-color: white;
+    color: black;
+    font-size: 14px;
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 5px;
   }
 
   /* 도면 위 물건 추가 입력 박스 */
