@@ -338,7 +338,7 @@
         pins[idx].y = parseInt(pin.style.top);
         try {
           // 핀 위치 수정 API
-          await apiFetch(`/api/pins/${id}`, {
+          await apiFetch(`/items/${id}/move`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ x: pins[idx].x, y: pins[idx].y })
