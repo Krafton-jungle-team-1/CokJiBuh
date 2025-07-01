@@ -317,7 +317,7 @@
     user-select: none;
     z-index: 10;
   }
-  .pin:after {
+  .pin:not(.pinHistory):after {
     content: attr(data-name);
     white-space: nowrap;
     color: black;
@@ -335,7 +335,7 @@
     transition: 0.5s;
   }
 
-  .pin:hover::after {
+  .pin:not(.pinHistory):hover::after {
     opacity: 1;
   }
 
@@ -348,8 +348,10 @@
   .pinHistory:after {
     content: attr(data-id);
     display: block;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    padding: 10px;
+    padding: 5px;
     background-color: white;
     color: black;
     font-size: 14px;

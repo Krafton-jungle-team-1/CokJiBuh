@@ -567,9 +567,13 @@
         if (btn.dataset.tab==='pinList') {
           pinListDiv.style.display='block';
           historyListDiv.style.display='none';
+          const pinHistoryList = document.querySelectorAll('.pinHistory');
+          pinHistoryList.forEach(el => el.remove());
         } else {
           pinListDiv.style.display='none';
           historyListDiv.style.display='block';
+          const settedPins = document.querySelectorAll('.pin:not(.pinHistory)');
+          settedPins.forEach(el => el.remove());
         }
       });
     });
