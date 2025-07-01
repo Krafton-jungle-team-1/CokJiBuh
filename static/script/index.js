@@ -7,7 +7,7 @@
     let history = [];
     let selectedPin = null;
     let isMovingPin = false;
-  
+
     // --- DOM 요소 ---
     const startScreen = document.getElementById('startScreen');
     const placeNameInput = document.getElementById('placeNameInput');
@@ -49,7 +49,8 @@
     const registerMsg = document.getElementById('registerMsg');
     const loading = document.getElementById('loading');
     const backdrop = document.getElementById('backdrop');
-  
+
+
     // --- 로그인/회원가입을 위한 API 호출 래퍼 ---
     function apiFetch(url, options = {}) {
       options.headers = options.headers || {};
@@ -277,16 +278,32 @@
     // --- 히스토리 불러오기 ---
     async function loadHistory() {
       if (!currentPlaceId) return;
+      // try {
+      //   const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
+      //   const arr = await res.json();
+      //   if (res.ok) {
+      //     history = arr.map(h => ({
+      //       time: new Date(h.time).getTime(),
+      //       text: `물건 위치가 변경되었습니다.`
+      //     }));
+      //     renderHistory();
+      //   }
+      // } catch {
+      //   alert('히스토리 불러오기 실패');
+      // }
       try {
-        const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
-        const arr = await res.json();
-        if (res.ok) {
-          history = arr.map(h => ({
-            time: new Date(h.time).getTime(),
-            text: `물건 위치가 변경되었습니다.`
-          }));
-          renderHistory();
-        }
+        pins.forEach(async pin => {
+          const res = await apiFetch(`/items/${pin.id}/move`);
+          const arr = await res.json();
+          arr.sort((a, b) => a._id.localeCompare(b._id));
+          if(res.ok){
+            history.push(arr.map(h => ({
+              x: h.x,
+              y: h.y,
+            })))
+            renderHistory();
+          }
+        })
       } catch {
         alert('히스토리 불러오기 실패');
       }
@@ -379,12 +396,41 @@
     // --- 히스토리 렌더링 ---
     function renderHistory() {
       historyListDiv.innerHTML = '';
-      history.forEach(h => {
+      pins.forEach(pin => {
         const div = document.createElement('div');
-        div.className = 'historyItem';
-        div.textContent = `[${new Date(h.time).toLocaleString()}] ${h.text}`;
+        div.className = 'pinItem';
+        div.dataset.id = pin.id;
+        div.innerHTML = `
+          <div class="pinEmoji">${pin.emoji||'📌'}</div>
+          <div class="pinName">${pin.name}</div>`;
+        div.addEventListener('click', (e) => markHistory(pin));
         historyListDiv.appendChild(div);
       });
+      // history.forEach(h => {
+      //   const div = document.createElement('div');
+      //   div.className = 'historyItem';
+      //   div.textContent = `[${new Date(h.time).toLocaleString()}] ${h.text}`;
+      //   historyListDiv.appendChild(div);
+      // });
+    }
+
+    function markHistory(pin){
+      document.querySelectorAll('.pinHistory').forEach(el => el.remove());
+      e.currentTarget.classList.add('active');
+      const index = pins.indexOf(pin);
+      const pinElementHistory = history[index];
+      if (!pinElementHistory || pinElementHistory.length === 0) {
+        return;
+      }
+      pinElementHistory.forEach((h, i) => {
+        const pin = document.createElement('div');
+        pin.className = 'pin pinHistory';
+        pin.dataset.id = i + 1;
+        pin.style.left = `${h.x}px`;
+        pin.style.top = `${h.y}px`;
+        pin.style.backgroundColor = pinData.color || '#ff8c00';
+        pin.textContent = pinData.emoji || '📌';
+      })
     }
   
     // --- 물건 추가 팝업 & API 호출 ---
