@@ -291,8 +291,8 @@
           console.log("히스토리 목록 불러옴", arr);
           if (res.ok) {
             myHistory.push(arr.map(h => ({
-              x: h.x,
-              y: h.y
+              x: h.newX,
+              y: h.newY,
             })));
           }
         }
