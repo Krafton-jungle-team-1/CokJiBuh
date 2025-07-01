@@ -1,5 +1,3 @@
-# merge260_ex4.py
-
 import os
 from io import BytesIO
 from datetime import datetime, timedelta
@@ -21,7 +19,6 @@ else:
     load_dotenv()
     
 app = Flask(__name__)
-# 즉, static_folder='static', static_url_path='/static'
 CORS(app)
 app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change_this_secret_key')
@@ -49,7 +46,7 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
     return decorated
 
-# ---------------- 인증 (회원가입, 로그인) ----------------
+# ---------------- 인증 (회원가입, 로그인, 아이디 중복 체크) ----------------
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json() or {}
@@ -261,28 +258,36 @@ def move_item(user, itemId):
     print(f"Inserted: {res.inserted_id}")
     return jsonify({'success': True, 'id': str(res.inserted_id)}), 201
 
-# ---------------- 마지막 장소 설정 ----------------
+# ---------------- 마지막 장소 설정 및 조회 ----------------
 @app.route('/api/last_place', methods=['PUT'])
 @token_required
-def set_last_place(user):
+def save_last_place(user):
     data = request.get_json() or {}
+    place_id = data.get('placeId')
+    place_name = data.get('placeName')
+    if not place_id or not place_name:
+        return jsonify({'error': 'Missing placeId or placeName'}), 400
     db.settings.update_one({'username': user},
-                           {'$set': {'place_id': data.get('placeId'), 'place_name': data.get('placeName')}},
-                           upsert=True)
-    return jsonify({'message': 'saved'})
+                          {'$set': {'place_id': place_id, 'place_name': place_name}},
+                          upsert=True)
+    return jsonify({'message': 'Saved'}), 200
 
 @app.route('/api/last_place', methods=['GET'])
 @token_required
 def get_last_place(user):
-    s = db.settings.find_one({'username': user})
-    return jsonify({'placeId': s.get('place_id') if s else None,
-                    'placeName': s.get('place_name') if s else None})
+    setting = db.settings.find_one({'username': user})
+    if not setting:
+        return jsonify({'placeId': None, 'placeName': None})
+    return jsonify({
+        'placeId': setting.get('place_id'),
+        'placeName': setting.get('place_name')
+    })
 
 @app.route('/api/last_place', methods=['DELETE'])
 @token_required
 def clear_last_place(user):
     db.settings.delete_one({'username': user})
-    return jsonify({'message': 'cleared'})
+    return jsonify({'message': 'Cleared'})
 
 # ---------------- 서버 실행 ----------------
 if __name__ == '__main__':
