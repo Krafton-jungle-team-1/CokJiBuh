@@ -1,295 +1,190 @@
-import os
-from io import BytesIO
-from datetime import datetime, timedelta
-from functools import wraps
-from flask import Flask, request, jsonify, send_file, abort, send_from_directory, redirect
+from flask import Flask, request, jsonify, send_file
 from flask_pymongo import PyMongo
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 from bson import ObjectId
+from datetime import datetime
 import gridfs
-from dotenv import load_dotenv
-import jwt
-from passlib.hash import bcrypt
+import os
 
-# Load environment variables
-env_path = os.path.join(os.getcwd(), '.env')
-if os.path.exists(env_path):
-    load_dotenv(env_path)
-else:
-    load_dotenv()
-    
 app = Flask(__name__)
-CORS(app)
-app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change_this_secret_key')
-
-# Initialize MongoDB and GridFS
+app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://localhost:27017/cokjibuh")
 mongo = PyMongo(app)
-db = mongo.db
-fs = gridfs.GridFS(db)
+CORS(app)
+fs = gridfs.GridFS(mongo.db)
 
-# ---------------- JWT 인증 데코레이터 ----------------
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth_header = request.headers.get('Authorization', '')
-        token = auth_header.split('Bearer ')[-1] if auth_header.startswith('Bearer ') else None
-        if not token:
-            return jsonify({'error': 'Token is missing'}), 401
-        try:
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            current_user = payload.get('username')
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token expired'}), 401
-        except Exception:
-            return jsonify({'error': 'Token is invalid'}), 401
-        return f(current_user, *args, **kwargs)
-    return decorated
-
-# ---------------- 인증 (회원가입, 로그인, 아이디 중복 체크) ----------------
+# 회원가입
 @app.route('/api/register', methods=['POST'])
 def register():
-    data = request.get_json() or {}
-    username = data.get('username')
-    password = data.get('password')
-    if not username or not password:
-        return jsonify({'error': 'Missing username or password'}), 400
-    if db.users.find_one({'username': username}):
-        return jsonify({'error': 'Username already exists'}), 400
-    hashed = bcrypt.hash(password)
-    db.users.insert_one({'username': username, 'password': hashed})
-    return jsonify({'message': 'User registered successfully'}), 201
+    data = request.json
+    if mongo.db.users.find_one({'username': data['username']}):
+        return jsonify({'error': '이미 존재하는 사용자입니다.'}), 400
+    mongo.db.users.insert_one({
+        'username': data['username'],
+        'password': data['password']
+    })
+    return jsonify({'message': '회원가입 성공'})
 
-@app.route('/api/check_username/<username>', methods=['GET'])
-def check_username(username):
-    exists = db.users.find_one({'username': username}) is not None
-    return jsonify({'exists': exists})
-
+# 로그인
 @app.route('/api/login', methods=['POST'])
 def login():
-    data = request.get_json() or {}
-    username = data.get('username')
-    password = data.get('password')
-    user = db.users.find_one({'username': username})
-    if not user or not bcrypt.verify(password, user['password']):
-        return jsonify({'error': 'Invalid username or password'}), 401
-    token = jwt.encode({'username': username, 'exp': datetime.utcnow() + timedelta(hours=24)},
-                       app.config['SECRET_KEY'], algorithm='HS256')
-    return jsonify({'token': token}), 200
+    data = request.json
+    user = mongo.db.users.find_one({'username': data['username'], 'password': data['password']})
+    if not user:
+        return jsonify({'error': '로그인 실패'}), 401
+    return jsonify({'token': user['username']})
 
-# ---------------- 클라이언트 라우팅 ----------------
-@app.route('/')
-def root():
-    latest = db.settings.find_one({'_id': 'last_place'})
-    if latest and latest.get('place_id'):
-        return redirect(f"/edit?placeId={latest['place_id']}")
-    return redirect('/edit')
-
-@app.route('/edit')
-def edit_page():
-    return send_from_directory('static', 'index.html')
-
-# ---------------- 장소 관리 (Place) ----------------
-@app.route('/api/places', methods=['POST'])
-@token_required
-def create_place(user):
-    try:
-        name = request.form.get('name')
-        image_file = request.files.get('image')
-        if not name or not image_file:
-            print("DEBUG: name, image_file", name, image_file)
-            return jsonify({'error': 'Both name and image are required'}), 400
-        # Optionally clear old data per user
-        db.places.delete_many({'username': user})
-        db.pins.delete_many({'username': user})
-        db.history.delete_many({'username': user})
-        
-        for file in fs.find({'metadata.username': user}):
-            fs.delete(file._id)
-
-        image_id = fs.put(image_file, filename=image_file.filename,
-                        content_type=image_file.content_type, metadata={'username': user})
-        place = {'username': user, 'name': name, 'image_id': image_id, 'created': datetime.utcnow()}
-        res = db.places.insert_one(place)
-        return jsonify({'_id': str(res.inserted_id)}), 201
-    except Exception as e:
-        import traceback
-        print('=== /api/places ERROR ===')
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/places/<place_id>', methods=['GET'])
-@token_required
-def get_place(user, place_id):
-    try:
-        p = db.places.find_one({'_id': ObjectId(place_id), 'username': user})
-    except Exception:
-        return jsonify({'error': 'Invalid place_id'}), 400
-    if not p:
-        return jsonify({'error': 'Place not found'}), 404
-    return jsonify({'_id': place_id, 'name': p['name'], 'image_url': f"/api/places/{place_id}/image"})
-
-@app.route('/api/places/<place_id>/image', methods=['GET'])
-@token_required
-def get_place_image(user, place_id):
-    try:
-        p = db.places.find_one({'_id': ObjectId(place_id), 'username': user})
-    except Exception:
-        abort(404)
-    if not p or 'image_id' not in p:
-        abort(404)
-    g = fs.get(p['image_id'])
-    return send_file(BytesIO(g.read()), mimetype=g.content_type, as_attachment=False,
-                     download_name=g.filename)
-
-# ---------------- 핀 (Pin) ----------------
-@app.route('/api/places/<place_id>/pins', methods=['GET'])
-@token_required
-def list_pins(user, place_id):
-    try:
-        oid = ObjectId(place_id)
-    except Exception:
-        return jsonify({'error': 'Invalid place_id'}), 400
-    docs = list(db.pins.find({'place_id': oid, 'username': user}))
-    for d in docs:
-        d['_id'], d['place_id'] = str(d['_id']), str(d['place_id'])
-    return jsonify(docs)
-
-@app.route('/api/places/<place_id>/pins', methods=['POST'])
-@token_required
-def create_pin(user, place_id):
-    data = request.get_json() or {}
-    try:
-        oid = ObjectId(place_id)
-    except Exception:
-        return jsonify({'error': 'Invalid place_id'}), 400
-    required = ['name', 'emoji', 'color', 'x', 'y']
-    if not all(k in data for k in required):
-        return jsonify({'error': f"Fields {required} are required"}), 400
-    doc = {k: data[k] for k in required}
-    doc.update({'username': user, 'place_id': oid, 'comment': data.get('comment', ''),
-                'updated': datetime.utcnow()})
-    res = db.pins.insert_one(doc)
-    doc['_id'], doc['place_id'] = str(res.inserted_id), place_id
-    return jsonify(doc), 201
-
-@app.route('/api/pins/<pin_id>', methods=['PUT'])
-@token_required
-def update_pin(user, pin_id):
-    data = request.get_json() or {}
-    try:
-        oid = ObjectId(pin_id)
-    except Exception:
-        return jsonify({'error': 'Invalid pin_id'}), 400
-    existing = db.pins.find_one({'_id': oid, 'username': user})
-    if not existing:
-        return jsonify({'error': 'Pin not found'}), 404
-    fields = ['name', 'emoji', 'color', 'x', 'y', 'comment']
-    updates = {k: data[k] for k in fields if k in data}
-    if not updates:
-        return jsonify({'error': 'No updatable fields'}), 400
-    db.pins.update_one({'_id': oid}, {'$set': updates})
-    updated = db.pins.find_one({'_id': oid})
-    updated['_id'], updated['place_id'] = str(updated['_id']), str(updated['place_id'])
-    return jsonify(updated)
-
-@app.route('/api/pins/<pin_id>', methods=['DELETE'])
-@token_required
-def delete_pin(user, pin_id):
-    try:
-        oid = ObjectId(pin_id)
-    except Exception:
-        return jsonify({'error': 'Invalid pin_id'}), 400
-    res = db.pins.delete_one({'_id': oid, 'username': user})
-    if res.deleted_count == 0:
-        return jsonify({'error': 'Pin not found'}), 404
-    return jsonify({'status': 'deleted'})
-
-@app.route('/items/<itemId>/move', methods=['GET'])
-@token_required
-def get_item_moves(user, itemId):
-    docs = list(db.changeLocation.find({'itemId': itemId, 'username': user}).sort('movedAt', 1))
-    for d in docs:
-        d['_id'] = str(d['_id'])
-    return jsonify(docs)
-
-# ---------------- 이동 이력 (History) ----------------
-@app.route('/api/places/<place_id>/history', methods=['GET'])
-@token_required
-def list_history(user, place_id):
-    try:
-        oid = ObjectId(place_id)
-    except Exception:
-        return jsonify({'error': 'Invalid place_id'}), 400
-    docs = list(db.history.find({'place_id': oid, 'username': user}).sort('time', 1))
-    for d in docs:
-        d['_id'], d['place_id'], d['pin_id'] = str(d['_id']), str(d['place_id']), str(d['pin_id'])
-    return jsonify(docs)
-
-@app.route('/api/places/<place_id>/history', methods=['POST'])
-@token_required
-def create_history(user, place_id):
-    data = request.get_json() or {}
-    try:
-        pid, oid = ObjectId(data.get('pin_id', '')), ObjectId(place_id)
-    except Exception:
-        return jsonify({'error': 'Invalid IDs'}), 400
-    if not all(k in data for k in ['pin_id', 'x', 'y']):
-        return jsonify({'error': "Fields 'pin_id','x','y' are required"}), 400
-    entry = {'username': user, 'place_id': oid, 'pin_id': pid,
-             'x': data['x'], 'y': data['y'], 'time': datetime.utcnow()}
-    res = db.history.insert_one(entry)
-    entry['_id'], entry['place_id'], entry['pin_id'] = str(res.inserted_id), place_id, data['pin_id']
-    return jsonify(entry), 201
-
-# ---------------- 아이템 이동 (Legacy) ----------------
-@app.route('/items/<itemId>/move', methods=['POST'])
-@token_required
-def move_item(user, itemId):
-    print(f"=== [MOVE API CALLED] user={user} itemId={itemId} ===")
-    data = request.get_json() or {}
-    print(f"Request Data: {data}")
-    if 'newX' not in data or 'newY' not in data:
-        print("Missing X or Y")
-        return jsonify({'error': "Missing 'newX' or 'newY'"}), 400
-    log = {'username': user, 'itemId': itemId,
-           'newX': data['newX'], 'newY': data['newY'], 'movedAt': datetime.utcnow()}
-    res = db.changeLocation.insert_one(log)
-    print(f"Inserted: {res.inserted_id}")
-    return jsonify({'success': True, 'id': str(res.inserted_id)}), 201
-
-# ---------------- 마지막 장소 설정 및 조회 ----------------
-@app.route('/api/last_place', methods=['PUT'])
-@token_required
-def save_last_place(user):
-    data = request.get_json() or {}
-    place_id = data.get('placeId')
-    place_name = data.get('placeName')
-    if not place_id or not place_name:
-        return jsonify({'error': 'Missing placeId or placeName'}), 400
-    db.settings.update_one({'username': user},
-                          {'$set': {'place_id': place_id, 'place_name': place_name}},
-                          upsert=True)
-    return jsonify({'message': 'Saved'}), 200
-
+# 마지막 장소 기억
 @app.route('/api/last_place', methods=['GET'])
-@token_required
-def get_last_place(user):
-    setting = db.settings.find_one({'username': user})
+def get_last_place():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user = mongo.db.users.find_one({'username': token})
+    if not user: return jsonify({'error': '인증 실패'}), 401
+    setting = mongo.db.settings.find_one({'username': token})
     if not setting:
         return jsonify({'placeId': None, 'placeName': None})
-    return jsonify({
-        'placeId': setting.get('place_id'),
-        'placeName': setting.get('place_name')
-    })
+    return jsonify({'placeId': setting.get('place_id'), 'placeName': setting.get('place_name')})
+
+@app.route('/api/last_place', methods=['PUT'])
+def save_last_place():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user = mongo.db.users.find_one({'username': token})
+    if not user: return jsonify({'error': '인증 실패'}), 401
+    data = request.json
+    mongo.db.settings.update_one(
+        {'username': token},
+        {'$set': {
+            'place_id': data.get('placeId'),
+            'place_name': data.get('placeName')
+        }},
+        upsert=True
+    )
+    return jsonify({'message': '저장됨'})
 
 @app.route('/api/last_place', methods=['DELETE'])
-@token_required
-def clear_last_place(user):
-    db.settings.delete_one({'username': user})
-    return jsonify({'message': 'Cleared'})
+def clear_last_place():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user = mongo.db.users.find_one({'username': token})
+    if not user: return jsonify({'error': '인증 실패'}), 401
+    mongo.db.settings.delete_one({'username': token})
+    return jsonify({'message': '삭제됨'})
 
-# ---------------- 서버 실행 ----------------
+# 장소 정보 조회 (자동 로그인용 추가 API)
+@app.route('/api/places/<place_id>', methods=['GET'])
+def get_place(place_id):
+    place = mongo.db.places.find_one({'_id': ObjectId(place_id)})
+    if not place:
+        return jsonify({'error': '장소 없음'}), 404
+    return jsonify({
+        'placeId': str(place['_id']),
+        'placeName': place['name'],
+        'imageUrl': f'/api/image/{place_id}'
+    })
+
+# 장소 업로드
+@app.route('/api/places', methods=['POST'])
+def upload_place():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user = mongo.db.users.find_one({'username': token})
+    if not user: return jsonify({'error': '인증 실패'}), 401
+    name = request.form.get('name')
+    image = request.files['image']
+    image_id = fs.put(image, filename=secure_filename(image.filename))
+    result = mongo.db.places.insert_one({
+        'name': name,
+        'image_id': image_id,
+        'owner': token,
+        'created_at': datetime.utcnow()
+    })
+    return jsonify({'_id': str(result.inserted_id)})
+
+# 이미지 서빙
+@app.route('/api/image/<place_id>')
+def get_image(place_id):
+    place = mongo.db.places.find_one({'_id': ObjectId(place_id)})
+    if not place:
+        return jsonify({'error': '이미지 없음'}), 404
+    image = fs.get(place['image_id'])
+    return send_file(image, mimetype='image/jpeg')
+
+# 핀 저장
+@app.route('/api/places/<place_id>/pins', methods=['POST'])
+def add_pin(place_id):
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user = mongo.db.users.find_one({'username': token})
+    if not user: return jsonify({'error': '인증 실패'}), 401
+    data = request.json
+    result = mongo.db.pins.insert_one({
+        'place_id': ObjectId(place_id),
+        'name': data['name'],
+        'emoji': data['emoji'],
+        'color': data['color'],
+        'x': data['x'],
+        'y': data['y'],
+        'comment': data.get('comment', '')
+    })
+    return jsonify({'_id': str(result.inserted_id), **data})
+
+# 핀 목록 불러오기
+@app.route('/api/places/<place_id>/pins', methods=['GET'])
+def get_pins(place_id):
+    pins = list(mongo.db.pins.find({'place_id': ObjectId(place_id)}))
+    for p in pins:
+        p['_id'] = str(p['_id'])
+    return jsonify(pins)
+
+# 핀 수정
+@app.route('/api/pins/<pin_id>', methods=['PUT'])
+def update_pin(pin_id):
+    data = request.json
+    mongo.db.pins.update_one(
+        {'_id': ObjectId(pin_id)},
+        {'$set': {
+            'name': data['name'],
+            'emoji': data['emoji'],
+            'comment': data['comment'],
+            'color': data['color']
+        }}
+    )
+    return jsonify({'message': '수정됨'})
+
+# 핀 삭제
+@app.route('/api/pins/<pin_id>', methods=['DELETE'])
+def delete_pin(pin_id):
+    mongo.db.pins.delete_one({'_id': ObjectId(pin_id)})
+    return jsonify({'message': '삭제됨'})
+
+# 핀 이동
+@app.route('/items/<pin_id>/move', methods=['POST'])
+def move_pin(pin_id):
+    data = request.json
+    mongo.db.pins.update_one({'_id': ObjectId(pin_id)}, {'$set': {'x': data['newX'], 'y': data['newY']}})
+    return jsonify({'message': '이동됨'})
+
+# 히스토리 저장
+@app.route('/api/places/<place_id>/history', methods=['POST'])
+def save_history(place_id):
+    data = request.json
+    mongo.db.history.insert_one({
+        'place_id': ObjectId(place_id),
+        'pin_id': ObjectId(data['pin_id']),
+        'x': data['x'],
+        'y': data['y'],
+        'time': datetime.utcnow()
+    })
+    return jsonify({'message': '저장됨'})
+
+# 히스토리 불러오기
+@app.route('/api/places/<place_id>/history', methods=['GET'])
+def get_history(place_id):
+    records = list(mongo.db.history.find({'place_id': ObjectId(place_id)}))
+    result = []
+    for r in records:
+        r['_id'] = str(r['_id'])
+        r['place_id'] = str(r['place_id'])
+        r['pin_id'] = str(r['pin_id'])
+        result.append(r)
+    return jsonify(result)
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(debug=True)
