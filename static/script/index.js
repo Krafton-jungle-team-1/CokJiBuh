@@ -235,16 +235,6 @@
             await loadHistory();
           };
           floorplan.src = URL.createObjectURL(file);
-          startScreen.style.display = 'none';
-          mainApp.style.display = 'flex';
-          document.title = `콕집어 - ${placeName}`;
-          const h2 = document.createElement('h2');
-          h2.textContent = placeName;
-          const tabmenu = document.querySelector('#tabMenu');
-          document.querySelector('#sidebar').insertBefore(h2, tabmenu);
-  
-          await loadPins();
-          await loadHistory();
         } else {
           alert(data.error || '장소 생성 실패');
           loading.style.display = 'none';
