@@ -251,7 +251,7 @@
       try {
         const res = await apiFetch(`/api/places/${currentPlaceId}/pins`);
         const arr = await res.json();
-        console.log(arr);
+        console.log("핀 목록 불러옴", arr);
         if (res.ok) {
           pins = arr.map(p => ({
             id: p._id, name: p.name, emoji: p.emoji,
@@ -288,6 +288,7 @@
           const res = await apiFetch(`/items/${pin.id}/move`);
           const arr = await res.json();
           arr.sort((a, b) => a._id.localeCompare(b._id));
+          console.log("히스토리 목록 불러옴", arr);
           if (res.ok) {
             myHistory.push(arr.map(h => ({
               x: h.x,
