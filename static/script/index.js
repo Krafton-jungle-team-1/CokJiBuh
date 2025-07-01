@@ -425,7 +425,7 @@
         pinElement.style.top = `${h.y}px`;
         pinElement.style.backgroundColor = pin.color || '#ff8c00';
         pinElement.textContent = pin.emoji || '📌';
-        floorplanContainer.appendChild(pin);
+        floorplanContainer.appendChild(pinElement);
       })
     }
   
