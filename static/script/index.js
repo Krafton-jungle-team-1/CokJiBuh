@@ -4,7 +4,7 @@
     let authToken = null;
     let currentPlaceId = null;
     let pins = [];
-    let history = [];
+    let myHistory = [];
     let selectedPin = null;
     let isMovingPin = false;
 
@@ -73,7 +73,7 @@
       authToken = null;
       currentPlaceId = null;
       pins = [];
-      history = [];
+      myHistory = [];
       loginBtn.textContent = '로그인';
       init(); // 다시 시작 화면으로
       clearPinsFromMap();
@@ -269,7 +269,7 @@
     // --- 히스토리 불러오기 ---
     async function loadHistory() {
       if (!currentPlaceId) return;
-      history = [];
+      myHistory = [];
       // try {
       //   const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
       //   const arr = await res.json();
@@ -289,7 +289,7 @@
           const arr = await res.json();
           arr.sort((a, b) => a._id.localeCompare(b._id));
           if (res.ok) {
-            history.push(arr.map(h => ({
+            myHistory.push(arr.map(h => ({
               x: h.x,
               y: h.y
             })));
