@@ -427,6 +427,8 @@
         pinElement.textContent = pin.emoji || '📌';
         floorplanContainer.appendChild(pinElement);
       })
+      console.log('핀 위치 렌더링 완료', pinElementHistory);
+      console.log('현재 DOM에 .pinHistory 수:', document.querySelectorAll('.pinHistory').length);
     }
   
     // --- 물건 추가 팝업 & API 호출 ---
