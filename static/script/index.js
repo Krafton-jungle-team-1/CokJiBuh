@@ -339,9 +339,9 @@
         try {
           // 핀 위치 수정 API
           await apiFetch(`/items/${id}/move`, {
-            method: 'PUT',
+            method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ x: pins[idx].x, y: pins[idx].y })
+            body: JSON.stringify({ newX: pins[idx].x, newY: pins[idx].y })
           });
           // 히스토리 생성 API
           await apiFetch(`/api/places/${currentPlaceId}/history`, {
