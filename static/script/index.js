@@ -358,6 +358,7 @@
             body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
           });
           addHistory(`물건 "${pins[idx].name}" 위치 변경됨.`);
+          loadHistory();
           renderHistory();
           renderPinList();
         } catch {
