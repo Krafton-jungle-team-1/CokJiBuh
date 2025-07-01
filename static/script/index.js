@@ -358,7 +358,7 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
           });
-          addHistory(`물건 "${pins[idx].name}" 위치 변경됨.`);
+          console.log(`물건 "${pins[idx].name}" 위치 변경됨.`);
           loadHistory();
           renderHistory();
           renderPinList();
@@ -464,7 +464,7 @@
           createPin(p.x, p.y, p);
           renderPinList();
           addPinPopup.style.display = 'none';
-          addHistory(`물건 "${name}" 추가됨.`);
+          console.log(`물건 "${name}" 추가됨.`);
           renderHistory();
         } else {
           alert(data.error||'추가 실패');
@@ -500,7 +500,7 @@
           Object.assign(selectedPin, { name, emoji, comment, color });
           updatePinOnMap(selectedPin);
           renderPinList();
-          addHistory(`물건 "${name}" 정보 수정됨.`);
+          console.log(`물건 "${name}" 정보 수정됨.`);
           renderHistory();
           closeEditModal();
         } else {
@@ -520,7 +520,7 @@
           pins = pins.filter(p=>p.id!==selectedPin.id);
           document.querySelector(`.pin[data-id="${selectedPin.id}"]`)?.remove();
           renderPinList();
-          addHistory(`물건 "${selectedPin.name}" 삭제됨.`);
+          console.log(`물건 "${selectedPin.name}" 삭제됨.`);
           renderHistory();
           closeEditModal();
         } else {
@@ -546,9 +546,10 @@
     }
   
     // --- 히스토리 로컬 추가 ---
-    function addHistory(text) {
-      myHistory.unshift({ time: Date.now(), text });
-    }
+    // function addHistory(text) {
+    //   // myHistory.unshift({ time: Date.now(), text });
+
+    // }
   
     // --- 물건 옮기기 토글 ---
     movePinBtn.addEventListener('click', () => {
