@@ -268,6 +268,7 @@
     // --- 히스토리 불러오기 ---
     async function loadHistory() {
       if (!currentPlaceId) return;
+      history = [];
       // try {
       //   const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
       //   const arr = await res.json();
@@ -282,18 +283,18 @@
       //   alert('히스토리 불러오기 실패');
       // }
       try {
-        pins.forEach(async pin => {
+        for (const pin of pins) {
           const res = await apiFetch(`/items/${pin.id}/move`);
           const arr = await res.json();
           arr.sort((a, b) => a._id.localeCompare(b._id));
-          if(res.ok){
+          if (res.ok) {
             history.push(arr.map(h => ({
               x: h.x,
-              y: h.y,
-            })))
-            renderHistory();
+              y: h.y
+            })));
           }
-        })
+        }
+        renderHistory();
       } catch {
         alert('히스토리 불러오기 실패');
       }
@@ -417,13 +418,13 @@
         return;
       }
       pinElementHistory.forEach((h, i) => {
-        const pin = document.createElement('div');
-        pin.className = 'pin pinHistory';
-        pin.dataset.id = i + 1;
-        pin.style.left = `${h.x}px`;
-        pin.style.top = `${h.y}px`;
-        pin.style.backgroundColor = pin.color || '#ff8c00';
-        pin.textContent = pin.emoji || '📌';
+        const pinElement = document.createElement('div');
+        pinElement.className = 'pin pinHistory';
+        pinElement.dataset.id = i + 1;
+        pinElement.style.left = `${h.x}px`;
+        pinElement.style.top = `${h.y}px`;
+        pinElement.style.backgroundColor = pin.color || '#ff8c00';
+        pinElement.textContent = pin.emoji || '📌';
         floorplanContainer.appendChild(pin);
       })
     }
@@ -508,7 +509,7 @@
     });
     deletePinBtn.addEventListener('click', async () => {
       if (!selectedPin) return;
-      if (!confirm(`정말 "${selectedPin.name}" 삭제?`)) return;
+      if (!confirm(`정말 "${selectedPin.name}"을 삭제하시겠습니까?`)) return;
       try {
         const res = await apiFetch(`/api/pins/${selectedPin.id}`, { method:'DELETE' });
         if (res.ok) {
