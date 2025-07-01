@@ -250,6 +250,7 @@
       if (!currentPlaceId) return;
       try {
         const res = await apiFetch(`/api/places/${currentPlaceId}/pins`);
+        console.log(res);
         const arr = await res.json();
         if (res.ok) {
           pins = arr.map(p => ({
