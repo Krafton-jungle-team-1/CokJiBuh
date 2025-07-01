@@ -345,6 +345,14 @@
     z-index: 9999;
   }
 
+  svg#historyLineSvg {
+    z-index: 0;
+  }
+  
+  .pin.pinHistory {
+    z-index: 1;
+  }
+
   .pinHistory:after {
     content: attr(data-id);
     display: block;

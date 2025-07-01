@@ -415,10 +415,27 @@
 
     function markHistory(pin){
       document.querySelectorAll('.pinHistory').forEach(el => el.remove());
+      document.querySelectorAll('.historyLine').forEach(el => el.remove());
+
       const index = pins.indexOf(pin);
       const pinElementHistory = myHistory[index];
       if (!pinElementHistory || pinElementHistory.length === 0) {
         return;
+      }
+      // svg 요소 생성
+      let svg = document.getElementById('historyLineSvg');
+      if (!svg) {
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('id', 'historyLineSvg');
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none'; // 마우스 방해 X
+        floorplanContainer.appendChild(svg);
+      } else {
+        svg.innerHTML = ''; // 기존 선 제거
       }
       pinElementHistory.forEach((h, i) => {
         const pinElement = document.createElement('div');
@@ -429,6 +446,20 @@
         pinElement.style.backgroundColor = pin.color || '#ff8c00';
         pinElement.textContent = pin.emoji || '📌';
         floorplanContainer.appendChild(pinElement);
+
+        //선 그리기, 다음 좌표가 있으면 선 생성 
+        if (i > 0) {
+          const prev = pinElementHistory[i - 1];
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', prev.x + 12); // 중심 기준 보정
+          line.setAttribute('y1', prev.y + 12);
+          line.setAttribute('x2', h.x + 12);
+          line.setAttribute('y2', h.y + 12);
+          line.setAttribute('stroke', pin.color || '#ff8c00');
+          line.setAttribute('stroke-width', '2');
+          line.classList.add('historyLine');
+          svg.appendChild(line);
+        }
       })
       console.log('핀 위치 렌더링 완료', pinElementHistory);
       console.log('현재 DOM에 .pinHistory 수:', document.querySelectorAll('.pinHistory').length);
@@ -569,6 +600,7 @@
           historyListDiv.style.display='none';
           const pinHistoryList = document.querySelectorAll('.pinHistory');
           pinHistoryList.forEach(el => el.remove());
+          document.querySelectorAll('.historyLine').forEach(el => el.remove());
         } else {
           pinListDiv.style.display='none';
           historyListDiv.style.display='block';
