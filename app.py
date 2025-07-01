@@ -1,3 +1,5 @@
+# merge260_ex2.py
+
 import os
 from io import BytesIO
 from datetime import datetime, timedelta
@@ -238,12 +240,16 @@ def create_history(user, place_id):
 @app.route('/items/<itemId>/move', methods=['POST'])
 @token_required
 def move_item(user, itemId):
+    print(f"=== [MOVE API CALLED] user={user} itemId={itemId} ===")
     data = request.get_json() or {}
+    print(f"Request Data: {data}")
     if 'newX' not in data or 'newY' not in data:
+        print("Missing X or Y")
         return jsonify({'error': "Missing 'newX' or 'newY'"}), 400
     log = {'username': user, 'itemId': itemId,
            'newX': data['newX'], 'newY': data['newY'], 'movedAt': datetime.utcnow()}
     res = db.changeLocation.insert_one(log)
+    print(f"Inserted: {res.inserted_id}")
     return jsonify({'success': True, 'id': str(res.inserted_id)}), 201
 
 # ---------------- 마지막 장소 설정 ----------------
@@ -273,4 +279,3 @@ def clear_last_place(user):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
