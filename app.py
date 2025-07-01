@@ -1,4 +1,4 @@
-# merge260_ex2.py
+# merge260_ex4.py
 
 import os
 from io import BytesIO
@@ -19,8 +19,9 @@ if os.path.exists(env_path):
     load_dotenv(env_path)
 else:
     load_dotenv()
-
+    
 app = Flask(__name__)
+# 즉, static_folder='static', static_url_path='/static'
 CORS(app)
 app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change_this_secret_key')
@@ -206,6 +207,14 @@ def delete_pin(user, pin_id):
     if res.deleted_count == 0:
         return jsonify({'error': 'Pin not found'}), 404
     return jsonify({'status': 'deleted'})
+
+@app.route('/items/<itemId>/move', methods=['GET'])
+@token_required
+def get_item_moves(user, itemId):
+    docs = list(db.changeLocation.find({'itemId': itemId, 'username': user}).sort('movedAt', 1))
+    for d in docs:
+        d['_id'] = str(d['_id'])
+    return jsonify(docs)
 
 # ---------------- 이동 이력 (History) ----------------
 @app.route('/api/places/<place_id>/history', methods=['GET'])
