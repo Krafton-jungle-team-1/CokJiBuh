@@ -105,6 +105,7 @@
   // --- 초기 화면/앱 화면 토글 ---
   function init() {
       startScreen.style.display = 'block';
+      showRegisterBtn.style.display = 'block';
       mainApp.style.display = 'none';
       loading.style.display = 'none';
       mainApp.classList.add('sidebar-visible');
@@ -120,9 +121,12 @@
   async function initMainScreen() {
       // 1) UI 전환
       startScreen.style.display = 'none';
+      showRegisterBtn.style.display = 'none';
       mainApp.style.display = 'flex';
       const placeName = localStorage.getItem('placeName')
       document.title = `콕집어 - ${placeName}`;
+      const sidebar = document.querySelector('#sidebar');
+      sidebar.querySelectorAll('h2').forEach(el => el.remove());
       const h2 = document.createElement('h2');
       h2.textContent = placeName;
       const tabmenu = document.querySelector('#tabMenu');
@@ -282,11 +286,11 @@
   toggleSidebarBtn.addEventListener('click', () => {
     if(mainApp.classList.contains('sidebar-visible')){
       mainApp.classList.remove('sidebar-visible');
-      mainApp.classList.add('sidebar-collapse');
+      mainApp.classList.add('sidebar-collapsed');
     }
     else {
       mainApp.classList.remove('sidebar-collapsed');
-      mainApp.classList.add('sidebar-visibled');
+      mainApp.classList.add('sidebar-visible');
     }
   });
 
@@ -337,10 +341,10 @@
                   mainApp.style.display = 'flex';
                   document.title = `콕집어 - ${placeName}`;
 
-                  const h2 = document.createElement('h2');
-                  h2.textContent = placeName;
-                  const tabmenu = document.querySelector('#tabMenu');
-                  document.querySelector('#sidebar').insertBefore(h2, tabmenu);
+                //   const h2 = document.createElement('h2');
+                //   h2.textContent = placeName;
+                //   const tabmenu = document.querySelector('#tabMenu');
+                //   document.querySelector('#sidebar').insertBefore(h2, tabmenu);
 
                   await loadPins();
                   await loadHistory();
@@ -425,8 +429,15 @@
       pin.style.left = `${x}px`;
       pin.style.top = `${y}px`;
       pin.style.backgroundColor = pinData.color || '#ff8c00';
+    //   pin.setProperty('--pin-bg-color', pinData.color);
       pin.textContent = pinData.emoji || '📌';
       pin.dataset.id = pinData.id;
+      pin.dataset.name = pinData.name;
+      const style = document.createElement('style');
+      style.textContent = `
+        .pin[data-id="${pinData.id}"]::after {
+        background-color: ${pinData.color};}`;
+      document.head.appendChild(style);
 
       let offsetX, offsetY, dragging = false;
 
@@ -507,7 +518,9 @@
           div.dataset.id = pin.id;
           div.innerHTML = `
         <div class="pinEmoji">${pin.emoji || '📌'}</div>
-        <div class="pinName">${pin.name}</div>`;
+        <div class="pinName">${pin.name}</div>
+        <div class="pinStatus"></div>
+        `;
           div.addEventListener('click', (e) => {
               const siblings = e.currentTarget.parentNode.querySelectorAll('.pinItem');
               siblings.forEach(el => el.classList.remove('active'));
@@ -584,7 +597,7 @@
       addPinPopup.style.top = (floorplanContainer.clientHeight / 2 - addPinPopup.clientHeight / 2) + 'px';
       newPinNameInput.value = '';
       newPinEmojiInput.value = '';
-      newPinColorSelect.value = '#ff8c00';
+      newPinColorSelect.value = '#ffb347';
   });
   confirmAddPinBtn.addEventListener('click', async () => {
       const name = newPinNameInput.value.trim();
@@ -621,7 +634,7 @@
     addPinPopup.style.display = 'none';
     newPinNameInput.value = '';
     newPinEmojiInput.value = '';
-    newPinColorSelect.value = '#ff8c00';
+    newPinColorSelect.value = '#ffb347';
   })
 
   // --- 편집 모달 열기/저장/삭제 ---
