@@ -112,6 +112,7 @@ html {
 /* 사이드바 (물건 리스트, 히스토리 등) */
 #sidebar {
   width: 320px;
+  height: 100vh;
   background: var(--brand-color);
   display: flex;
   flex-direction: column;
@@ -168,7 +169,7 @@ html {
 .tabButton.active {
   background: white;
   border-color: #ff8c00;
-  color: #e65100;
+  color: #ff8c00;
 }
 
 /* 버튼 그룹 */
@@ -212,6 +213,7 @@ button.actionBtn:disabled {
 }
 
 .pinItem {
+  box-sizing: border-box;
   background: white;
   border-radius: 8px;
   padding: 10px 12px;
@@ -223,7 +225,7 @@ button.actionBtn:disabled {
   transition: background-color 0.2s;
   user-select: none;
   width:  100%;
-  margin: 10px 15px;
+  /* margin: 10px 15px; */
 }
 .pinItem.active {
   background: #fff8e1;
