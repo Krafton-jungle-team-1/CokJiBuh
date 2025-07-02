@@ -27,6 +27,8 @@
   let myHistory = [];
   let selectedPin = null;
   let isMovingPin = false;
+    let lastClickedX = null;
+    let lastClickedY = null;
 
   // --- DOM 요소 ---
   const startScreen = document.getElementById('startScreen');
@@ -285,8 +287,8 @@
       mainApp.classList.add('sidebar-collapse');
     }
     else {
-      mainApp.classList.remove('sidebar-collapsed');
-      mainApp.classList.add('sidebar-visibled');
+      mainApp.classList.remove('sidebar-collapse');
+      mainApp.classList.add('sidebar-visible');
     }
   });
 
@@ -377,40 +379,47 @@
       }
   }
 
+  async function savePinToDB(pinData) {
+  const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`
+    },
+    body: JSON.stringify(pinData)
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    alert("핀 저장 실패: " + err.error);
+  } else {
+    const savedPin = await res.json();
+    console.log("핀 저장됨:", savedPin);
+  }
+}
+
+
   // --- 히스토리 불러오기 ---
   async function loadHistory() {
       if (!currentPlaceId) return;
       myHistory = [];
-      // try {
-      //   const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
-      //   const arr = await res.json();
-      //   if (res.ok) {
-      //     history = arr.map(h => ({
-      //       time: new Date(h.time).getTime(),
-      //       text: `물건 위치가 변경되었습니다.`
-      //     }));
-      //     renderHistory();
-      //   }
-      // } catch {
-      //   alert('히스토리 불러오기 실패');
-      // }
-      try {
-          for (const pin of pins) {
-              const res = await apiFetch(`/items/${pin.id}/move`);
-              const arr = await res.json();
-              arr.sort((a, b) => a._id.localeCompare(b._id));
-              console.log("히스토리 목록 불러옴", arr);
-              if (res.ok) {
-                  myHistory.push(arr.map(h => ({
-                      x: h.newX,
-                      y: h.newY,
-                  })));
-              }
-          }
-          renderHistory();
-      } catch {
-          alert('히스토리 불러오기 실패');
+try {
+  for (const pin of pins) {
+      const res = await apiFetch(`/items/${pin.id}/move`);
+      const arr = await res.json();
+      arr.sort((a, b) => a._id.localeCompare(b._id));
+      if (res.ok) {
+          myHistory.push(arr.map(h => ({
+              x: h.newX,
+              y: h.newY,
+          })));
       }
+  }
+  renderHistory();
+} catch {
+  alert('히스토리 불러오기 실패');
+}
+
   }
 
   // --- 핀 화면에서 모두 지우기 ---
@@ -449,35 +458,33 @@
           pin.style.top = `${newY}px`;
       });
       document.addEventListener('mouseup', async e => {
-          if (!dragging) return;
-          dragging = false;
-          pin.classList.remove('dragging');
-          const id = pin.dataset.id;
-          const idx = pins.findIndex(p => p.id === id);
-          if (idx === -1) return;
-          pins[idx].x = parseInt(pin.style.left);
-          pins[idx].y = parseInt(pin.style.top);
-          try {
-              // 핀 위치 수정 API
-              await apiFetch(`/items/${id}/move`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ newX: pins[idx].x, newY: pins[idx].y })
-              });
-              // 히스토리 생성 API
-              await apiFetch(`/api/places/${currentPlaceId}/history`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
-              });
-              console.log(`물건 "${pins[idx].name}" 위치 변경됨.`);
-              loadHistory();
-              renderHistory();
-              renderPinList();
-          } catch {
-              alert('위치 저장 실패');
-          }
+  if (!dragging) return;
+  dragging = false;
+  pin.classList.remove('dragging');
+  const id = pin.dataset.id;
+  const idx = pins.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  pins[idx].x = parseInt(pin.style.left);
+  pins[idx].y = parseInt(pin.style.top);
+  try {
+      await apiFetch(`/items/${id}/move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newX: pins[idx].x, newY: pins[idx].y })
       });
+      await apiFetch(`/api/places/${currentPlaceId}/history`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
+      });
+      loadHistory();
+      renderHistory();
+      renderPinList();
+  } catch {
+      alert('위치 저장 실패');
+  }
+});
+
 
       floorplanContainer.appendChild(pin);
   }
@@ -586,36 +593,37 @@
       newPinEmojiInput.value = '';
       newPinColorSelect.value = '#ff8c00';
   });
-  confirmAddPinBtn.addEventListener('click', async () => {
-      const name = newPinNameInput.value.trim();
-      const emoji = newPinEmojiInput.value.trim() || '';
-      const color = newPinColorSelect.value;
-      if (!name) { alert('물건 이름을 입력하세요.'); return; }
-      if (!currentPlaceId) { alert('장소가 선택되지 않았습니다.'); return; }
-      const x = floorplanContainer.clientWidth / 2 - 16;
-      const y = floorplanContainer.clientHeight / 2 - 16;
-      try {
-          const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name, emoji, color, x, y })
-          });
-          const data = await res.json();
-          if (res.ok) {
-              const p = { id: data._id, name: data.name, emoji: data.emoji, color: data.color, x: data.x, y: data.y, comment: data.comment };
-              pins.push(p);
-              createPin(p.x, p.y, p);
-              renderPinList();
-              addPinPopup.style.display = 'none';
-              console.log(`물건 "${name}" 추가됨.`);
-              renderHistory();
-          } else {
-              alert(data.error || '추가 실패');
-          }
-      } catch {
-          alert('서버 오류');
+// 핀 추가 시 중앙 좌표로 고정
+confirmAddPinBtn.addEventListener('click', async () => {
+  const name = newPinNameInput.value.trim();
+  const emoji = newPinEmojiInput.value.trim() || '';
+  const color = newPinColorSelect.value;
+  if (!name) { alert('물건 이름을 입력하세요.'); return; }
+  if (!currentPlaceId) { alert('장소가 선택되지 않았습니다.'); return; }
+  const x = floorplanContainer.clientWidth / 2 - 16;
+  const y = floorplanContainer.clientHeight / 2 - 16;
+  try {
+      const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, emoji, color, x, y })
+      });
+      const data = await res.json();
+      if (res.ok) {
+          const p = { id: data._id, name: data.name, emoji: data.emoji, color: data.color, x: data.x, y: data.y, comment: data.comment };
+          pins.push(p);
+          createPin(p.x, p.y, p);
+          renderPinList();
+          addPinPopup.style.display = 'none';
+          renderHistory();
+      } else {
+          alert(data.error || '추가 실패');
       }
-  });
+  } catch {
+      alert('서버 오류');
+  }
+});
+
 
   cancelAddPinBtn.addEventListener('click', () => {
     addPinPopup.style.display = 'none';
