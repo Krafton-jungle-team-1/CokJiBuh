@@ -125,6 +125,7 @@ html {
   position: fixed;
   top: 0;
   z-index: 1000;
+  transition: 0.5s;
 }
 
 #sidebar h2 {
@@ -524,7 +525,7 @@ svg#historyLineSvg {
 }
 
 /* 사이드바 접힌 상태 */
-.sidebar-collapsed #sidebar {
+#mainApp.sidebar-collapsed #sidebar {
   left: -320px;
 }
 
@@ -559,7 +560,7 @@ svg#historyLineSvg {
 left: 276px;
 }
 
-.sidebar-visible #sidebar {
+#mainApp.sidebar-visible #sidebar {
   left: 0;
 }
 

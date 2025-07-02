@@ -285,8 +285,8 @@
       mainApp.classList.add('sidebar-collapse');
     }
     else {
-      mainApp.classList.remove('sidebar-collapse');
-      mainApp.classList.add('sidebar-visible');
+      mainApp.classList.remove('sidebar-collapsed');
+      mainApp.classList.add('sidebar-visibled');
     }
   });
 
