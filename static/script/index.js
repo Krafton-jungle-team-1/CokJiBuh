@@ -198,7 +198,7 @@ function filterPinsByColor(color) {
 
   document.querySelectorAll('.pinItem').forEach(item => {
     if (item.dataset.color === color) {
-      item.style.display = 'block';
+      item.style.display = 'flex';
     } else {
       item.style.display = 'none';
     }
@@ -212,7 +212,7 @@ function showAllPins() {
     pin.style.display = 'block';
   });
    document.querySelectorAll('.pinItem').forEach(item => {
-    item.style.display = 'block';
+    item.style.display = 'flex';
   });
 }
 
@@ -611,7 +611,7 @@ try {
     div.dataset.id = pin.id;
     div.dataset.color = pin.color;
     div.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+      <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
         <div class="pinEmoji">${pin.emoji || '📌'}</div>
         <div class="pinName">${pin.name}</div>
       </div>
