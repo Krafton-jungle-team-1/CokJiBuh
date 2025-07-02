@@ -105,6 +105,7 @@
   // --- 초기 화면/앱 화면 토글 ---
   function init() {
       startScreen.style.display = 'block';
+      showRegisterBtn.style.display = 'block';
       mainApp.style.display = 'none';
       loading.style.display = 'none';
       mainApp.classList.add('sidebar-visible');
@@ -120,6 +121,7 @@
   async function initMainScreen() {
       // 1) UI 전환
       startScreen.style.display = 'none';
+      showRegisterBtn.style.display = 'none';
       mainApp.style.display = 'flex';
       const placeName = localStorage.getItem('placeName')
       document.title = `콕집어 - ${placeName}`;
