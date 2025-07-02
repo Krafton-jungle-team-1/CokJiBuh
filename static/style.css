@@ -525,7 +525,7 @@ svg#historyLineSvg {
 
 /* 사이드바 접힌 상태 */
 .sidebar-collapsed #sidebar {
-  display: none;
+  left: -320px;
 }
 
 .sidebar-collapsed #floorplan-container {
@@ -560,7 +560,7 @@ left: 276px;
 }
 
 .sidebar-visible #sidebar {
-  display: flex;
+  left: 0;
 }
 
 #mainApp.sidebar-collapsed #toggleSidebarBtn {
