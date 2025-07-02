@@ -444,6 +444,10 @@ svg#historyLineSvg {
   user-select: none;
 }
 
+.wrapper {
+  z-index: 9999999 !important;
+}
+
 #emojiInsert {
   position: relative;
 }

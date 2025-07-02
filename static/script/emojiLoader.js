@@ -1,7 +1,5 @@
 const emojiButton = document.querySelector('#emojiInsert > #emoji-btn');
-const picker = new EmojiButton({
-    zIndex: '9999999',
-});
+const picker = new EmojiButton();
 emojiButton.addEventListener('click', () => {
     picker.togglePicker(emojiButton);
 });
