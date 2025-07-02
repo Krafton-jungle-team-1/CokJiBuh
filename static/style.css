@@ -708,3 +708,15 @@ background-color: #ffa726;
 #registerCloseBtn {
   margin-top: 5px;
 }
+
+#pinFilterContainer {
+  padding: 6px 0;
+  text-align: center;
+  border-bottom: 1px solid #ffb74d; /* 연한 주황색 선 */
+  margin-bottom: 6px;
+}
+
+.colorFilterBtn:focus {
+  outline: 2px solid #ff8c00;
+  outline-offset: 2px;
+}

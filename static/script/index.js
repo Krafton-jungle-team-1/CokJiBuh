@@ -113,7 +113,96 @@
       console.log('startScreen', startScreen);
       console.log('mainApp', mainApp);
       console.log('loading', loading);
+      addColorFilterButtons();
   }
+ function addColorFilterButtons() {
+  const pinListDiv = document.getElementById('pinList');
+  if (!pinListDiv) return;
+
+  const existingContainer = document.getElementById('pinFilterContainer');
+  if (existingContainer) {
+    existingContainer.remove();
+  }
+
+  const container = document.createElement('div');
+  container.id = 'pinFilterContainer';
+  container.style.padding = '5px 10px';
+  container.style.textAlign = 'center';
+  container.style.backgroundColor = '#f5a623'; // 주황 계열 배경
+
+  const colors = [
+    { code: '#f44336', name: '빨강' },
+    { code: '#ff8c00', name: '주황' },
+    { code: '#ffeb3b', name: '노랑' },
+    { code: '#4caf50', name: '초록' },
+    { code: '#2196f3', name: '파랑' },
+    { code: '#9c27b0', name: '보라' },
+  ];
+
+  colors.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'colorFilterBtn';
+    btn.dataset.color = c.code;
+    btn.title = c.name;
+    btn.style.backgroundColor = c.code;
+    btn.style.width = '24px';
+    btn.style.height = '24px';
+    btn.style.border = 'none';
+    btn.style.borderRadius = '50%';
+    btn.style.margin = '0 4px';
+    btn.style.cursor = 'pointer';
+    btn.style.verticalAlign = 'middle';
+    btn.style.boxShadow = '0 0 3px rgba(0,0,0,0.3)';
+    container.appendChild(btn);
+  });
+
+  // 전체보기 버튼
+  const clearBtn = document.createElement('button');
+  clearBtn.id = 'clearFilterBtn';
+  clearBtn.textContent = '전체';
+  clearBtn.style.marginLeft = '12px';
+  clearBtn.style.padding = '4px 8px';
+  clearBtn.style.border = 'none';
+  clearBtn.style.borderRadius = '4px';
+  clearBtn.style.cursor = 'pointer';
+  clearBtn.style.backgroundColor = '#fff';
+  clearBtn.style.color = '#f57c00';
+  clearBtn.style.fontWeight = 'bold';
+  container.appendChild(clearBtn);
+
+  // pinListDiv 바로 위에 삽입
+  pinListDiv.parentNode.insertBefore(container, pinListDiv);
+
+  // 필터 버튼 클릭 이벤트
+  container.querySelectorAll('.colorFilterBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const color = btn.dataset.color;
+      filterPinsByColor(color);
+    });
+  });
+  clearBtn.addEventListener('click', () => {
+    showAllPins();
+  });
+}
+
+// 핀 색상 필터링 함수
+function filterPinsByColor(color) {
+  document.querySelectorAll('.pin').forEach(pin => {
+    if (pin.dataset.color === color) {
+      pin.style.display = 'block';
+    } else {
+      pin.style.display = 'none';
+    }
+  });
+}
+
+// 모든 핀 보이기 함수
+function showAllPins() {
+  document.querySelectorAll('.pin').forEach(pin => {
+    pin.style.display = 'block';
+  });
+}
+
   bootstrap();
 
   // 두 번째 화면 초기화: 사진 띄우고 핀·히스토리 로드
@@ -436,6 +525,7 @@ try {
       pin.style.backgroundColor = pinData.color || '#ff8c00';
       pin.textContent = pinData.emoji || '📌';
       pin.dataset.id = pinData.id;
+      pin.dataset.color = pinData.color || '#ff8c00'; 
 
       let offsetX, offsetY, dragging = false;
 
@@ -741,4 +831,7 @@ confirmAddPinBtn.addEventListener('click', async () => {
       });
   });
 
+  window.addEventListener('load', () => {
+  init();
+});
 })();
