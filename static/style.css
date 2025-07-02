@@ -225,6 +225,7 @@ button.actionBtn:disabled {
   cursor: pointer;
   transition: background-color 0.2s;
   user-select: none;
+   white-space: nowrap; 
   width:  100%;
   /* margin: 10px 15px; */
 }
@@ -234,6 +235,10 @@ button.actionBtn:disabled {
 
 .pinItem:hover {
   background-color: #fff8e1;
+}
+
+.pinEmoji {
+  margin-right: 8px; /* 이모지와 글자 사이 간격 */
 }
 
 .pinEmoji {
@@ -250,6 +255,9 @@ button.actionBtn:disabled {
   font-size: 16px;
   color: #4e342e;
   user-select: text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pinStatus {
@@ -720,3 +728,4 @@ background-color: #ffa726;
   outline: 2px solid #ff8c00;
   outline-offset: 2px;
 }
+

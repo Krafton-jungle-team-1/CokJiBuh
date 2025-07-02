@@ -194,12 +194,24 @@ function filterPinsByColor(color) {
       pin.style.display = 'none';
     }
   });
+
+  document.querySelectorAll('.pinItem').forEach(item => {
+    if (item.dataset.color === color) {
+      item.style.display = 'block';
+    } else {
+      item.style.display = 'none';
+    }
+  });
 }
+
 
 // 모든 핀 보이기 함수
 function showAllPins() {
   document.querySelectorAll('.pin').forEach(pin => {
     pin.style.display = 'block';
+  });
+   document.querySelectorAll('.pinItem').forEach(item => {
+    item.style.display = 'block';
   });
 }
 
@@ -580,20 +592,24 @@ try {
   }
 
   // --- 물건 리스트 렌더링 ---
-  function renderPinList() {
-      pinListDiv.innerHTML = '';
-      pins.forEach(pin => {
-          const div = document.createElement('div');
-          div.className = 'pinItem';
-          div.dataset.id = pin.id;
-          div.innerHTML = `
+ function renderPinList() {
+  pinListDiv.innerHTML = '';
+  pins.forEach(pin => {
+    const div = document.createElement('div');
+    div.className = 'pinItem';
+    div.dataset.id = pin.id;
+    div.dataset.color = pin.color;
+    div.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
         <div class="pinEmoji">${pin.emoji || '📌'}</div>
         <div class="pinName">${pin.name}</div>
-        <div class="pinStatus">${pin.comment ? '코멘트 있음' : ''}</div>`;
-          div.addEventListener('click', () => openEditModal(pin));
-          pinListDiv.appendChild(div);
-      });
-  }
+      </div>
+      <div class="pinStatus">${pin.comment ? '코멘트 있음' : ''}</div>
+    `;
+    div.addEventListener('click', () => openEditModal(pin));
+    pinListDiv.appendChild(div);
+  });
+}
 
   // --- 히스토리 렌더링 ---
   function renderHistory() {
@@ -603,8 +619,7 @@ try {
           div.className = 'pinItem';
           div.dataset.id = pin.id;
           div.innerHTML = `
-        <div class="pinEmoji">${pin.emoji || '📌'}</div>
-        <div class="pinName">${pin.name}</div>`;
+        <div class="pinEmoji">${pin.emoji || '📌'}</div><div class="pinName">${pin.name}</div>`;
           div.addEventListener('click', (e) => {
               const siblings = e.currentTarget.parentNode.querySelectorAll('.pinItem');
               siblings.forEach(el => el.classList.remove('active'));
