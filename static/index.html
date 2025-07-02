@@ -79,7 +79,7 @@
       <!-- 물건 추가 팝업 -->
       <div id="addPinPopup">
         <input type="text" id="newPinName" placeholder="물건 이름" />
-        <input type="text" id="newPinEmoji" placeholder="이모지 (예: 📌)" />
+        <div id="emojiInsert"><input type="text" id="newPinEmoji" placeholder="이모지 (예: 📌)" /><button id="emoji-btn">&#9786;</button></div>
         <select id="newPinColor">
           <option value="#ffb347">주황</option>
           <option value="#ff6f91">빨강</option>
@@ -97,7 +97,7 @@
   <!-- 편집 모달 -->
   <div id="editModal">
     <input type="text" id="editPinName" placeholder="물건 이름" />
-    <input type="text" id="editPinEmoji" placeholder="이모지 (예: 📌)" />
+    <div id="emojiInsert_2"><input type="text" id="editPinEmoji" placeholder="이모지 (예: 📌)" /><button id="emoji-btn">&#9786;</button></div>
     <textarea id="editPinComment" placeholder="코멘트"></textarea>
     <select id="editPinColor">
         <option value="#ffb347">주황</option>
@@ -113,6 +113,8 @@
       <button id="cancelBtn">취소</button>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@3.0.3/dist/index.min.js"></script>
+  <script src="/static/script/emojiLoader.js"></script>
   <script src="/static/script/index.js"></script>
 </body>
 

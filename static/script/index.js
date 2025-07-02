@@ -122,6 +122,7 @@
       // 1) UI 전환
       startScreen.style.display = 'none';
       showRegisterBtn.style.display = 'none';
+      loginPopup.style.display = 'none';
       mainApp.style.display = 'flex';
       const placeName = localStorage.getItem('placeName')
       document.title = `콕집어 - ${placeName}`;
@@ -728,17 +729,20 @@
           // 1) active 클래스 토글
           tabButtons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
+          const pins = document.querySelectorAll('.pin:not(.pinHistory)');
 
           // 2) 화면 전환 및 데이터 로드
           if (btn.dataset.tab === 'pinList') {
               pinListDiv.style.display = 'block';
               historyListDiv.style.display = 'none';
+              pins.forEach(pin => pin.style.display = 'block');
               renderPinList();
               // 히스토리 궤적만 제거
               document.querySelectorAll('.pinHistory').forEach(el => el.remove());
               document.querySelectorAll('.historyLine').forEach(el => el.remove());
           } else {
               pinListDiv.style.display = 'none';
+              pins.forEach(pin => pin.style.display = 'none');
               historyListDiv.style.display = 'block';
               // 히스토리 탭 클릭 시 즉시 궤적 그리기
               await loadHistory();

@@ -431,7 +431,7 @@ svg#historyLineSvg {
   cursor: pointer;
 }
 
-#addPinPopup button {
+#addPinPopup > button {
   background: #FFB74D;
   border: none;
   border-radius: 8px;
@@ -444,7 +444,41 @@ svg#historyLineSvg {
   user-select: none;
 }
 
-#addPinPopup button:hover {
+.wrapper {
+  z-index: 9999999 !important;
+}
+
+#emojiInsert {
+  position: relative;
+}
+
+#emojiInsert input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: #F0F0F0;
+  font-size: 15px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+#emojiInsert_2 > #emoji-btn {
+  right: 23px;
+}
+
+#emoji-btn {
+  position: absolute;
+  right: 0px;
+  background-color: transparent;
+  border: none;
+  color: #747587;
+  font-size: 23px;
+  cursor: pointer;
+}
+
+#addPinPopup > button:hover {
   background: #ffa726;
 }
 
