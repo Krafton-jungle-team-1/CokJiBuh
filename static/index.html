@@ -1,3 +1,5 @@
+<!-- signTotal-->
+
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -36,7 +38,7 @@
   <!-- 시작 화면 -->
   <div id="startScreen">
     <h1>
-      <img src="logo.png" width="32px" height="40px">
+      <img src="/static/logo.png" width="32px" height="40px">
         <path
           d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
       </svg>
@@ -56,7 +58,7 @@
   </div>
 
   <!-- 메인 화면 -->
-  <div id="mainApp">
+  <div id="mainApp" class="sidebar-visible">
     <button id="toggleSidebarBtn">☰</button>
     <div id="sidebar">
       <!-- <h2>🏠 집</h2> -->
@@ -72,7 +74,7 @@
       <div id="historyList" style="display:none;"></div>
     </div>
     <div id="floorplan-container">
-      <img id="floorplan" src="" alt="도면 이미지" draggable="false" />
+      <img id="floorplan" alt="도면 이미지" draggable="false" />
 
       <!-- 물건 추가 팝업 -->
       <div id="addPinPopup">
@@ -87,6 +89,7 @@
           <option value="#ffeb3b">노랑</option>
         </select>
         <button id="confirmAddPinBtn">추가</button>
+        <button id="cancelAddPinBtn">취소</button>
       </div>
     </div>
   </div>
