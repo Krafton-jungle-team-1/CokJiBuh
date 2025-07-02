@@ -209,8 +209,10 @@ button.actionBtn:disabled {
   overflow-y: auto;
   background: #fff3e0;
   border-radius: 10px;
-  padding: 10px 6px;
+  padding: 10px 8px;
+  /* gap: 6px; */
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 
 .pinItem {
@@ -225,8 +227,9 @@ button.actionBtn:disabled {
   cursor: pointer;
   transition: background-color 0.2s;
   user-select: none;
-  width:  100%;
-  /* margin: 10px 15px; */
+  width: 100%;
+  margin-bottom: 5px;
+  min-width: 0;
 }
 .pinItem.active {
   background: #fff8e1;
@@ -250,6 +253,10 @@ button.actionBtn:disabled {
   font-size: 16px;
   color: #4e342e;
   user-select: text;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pinStatus {
@@ -265,7 +272,8 @@ button.actionBtn:disabled {
   overflow-y: auto;
   background: #fff3e0;
   border-radius: 10px;
-  padding: 8px 12px;
+  padding: 10px 8px;
+  /* gap: 8px; */
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
   font-size: 14px;
   color: #5d4037;
@@ -329,6 +337,7 @@ button.actionBtn:disabled {
 }
 .pin:not(.pinHistory):after {
   content: attr(data-name);
+  /* background-color: var(--pin-bg-color); */
   text-align: center;
   white-space: nowrap;
   color: black;
@@ -366,6 +375,7 @@ svg#historyLineSvg {
 
 .pinHistory:after {
   content: attr(data-id);
+  text-align: center;
   display: block;
   width: 16px;
   height: 16px;
@@ -375,7 +385,7 @@ svg#historyLineSvg {
   color: black;
   font-size: 14px;
   position: absolute;
-  top: -100%;
+  top: -110%;
   left: 50%;
   transform: translateX(-50%);
   margin-bottom: 5px;
@@ -463,9 +473,13 @@ svg#historyLineSvg {
   padding: 10px 12px;
   font-size: 16px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  background-color: #F0F0F0;
   font-family: inherit;
   outline: none;
+  border: none;
+}
+#editModal select {
+  background-color: white;
 }
 
 #editModal textarea {
@@ -494,30 +508,30 @@ svg#historyLineSvg {
 }
 
 #savePinBtn {
-  background-color: #4caf50;
+  background-color: #FFA726;
   color: white;
 }
 
 #savePinBtn:hover {
-  background-color: #388e3c;
+  background-color: #FB8C00;
 }
 
 #deletePinBtn {
-  background-color: #f44336;
+  background-color: #2196F3;
   color: white;
 }
 
 #deletePinBtn:hover {
-  background-color: #d32f2f;
+  background-color: #1976D2;
 }
 
 #cancelBtn {
-  background-color: #9e9e9e;
+  background-color: #B0BEC5;
   color: white;
 }
 
 #cancelBtn:hover {
-  background-color: #616161;
+  background-color: #90A4AE;
 }
 
 #toggleSidebarBtn:hover {
@@ -534,7 +548,7 @@ svg#historyLineSvg {
 }
 #toggleSidebarBtn {
   position: fixed;
-  top: 16px;
+  top: 10px;
   left: 16px;
   z-index: 3000;
   background: #ffb74d;
@@ -554,10 +568,14 @@ svg#historyLineSvg {
   transition: left 0.3s ease, background-color 0.3s ease;
 }
 
+#toggleSidebarBtn {
+  transition: 0.5s;
+}
+
 #mainApp.sidebar-visible #toggleSidebarBtn {
 /* 사이드바가 320px이니깐,
   버튼을 사이드바 오른쪽 끝에 붙이려면 320 - 36 - 8 (여유) = 276px */
-left: 276px;
+left: 335px;
 }
 
 #mainApp.sidebar-visible #sidebar {
@@ -618,6 +636,9 @@ background-color: #ffa726;
   z-index: 998;
   margin: 5px;
 }
+#loginBtn:hover, #showRegisterBtn:hover {
+  background-color: #ffa726;
+}
 #backdrop {
   position: fixed;
   top: 0;
@@ -650,6 +671,7 @@ background-color: #ffa726;
   padding: 10px;
   border-radius: 10px;
   font-size: 14px;
+  outline: none;
 }
 #loginPopup button {
   width: 100%;
