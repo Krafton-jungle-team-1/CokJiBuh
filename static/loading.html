@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
     <style>
         #loading {
             display: flex;
@@ -37,5 +38,22 @@
             <path d="M109 20H120L139 60H122V130H17V60H0L16.5 20H89V0H109V20ZM29 88V100H42V88H29ZM47 88V100H59V88H47ZM29 83H42V70H29V83ZM47 83H59V70H47V83Z" fill="#FFB74D"/>
         </svg>            
     </div>
+    <input type="text" id="test" />
+    <button id="emoji-btn">이모지</button>
+    <script>
+        const button = document.querySelector("#emoji_btn");
+        const picker = new EmojiButton({
+            position: 'bottom-start'
+        });
+
+        button.addEventListener('click', () => {
+            picker.togglePicker(button);
+        });
+
+        picker.on('emoji', emoji => {
+            const text_box = document.querySelector('#test');
+            text_box.value += emoji;
+        });
+    </script>
 </body>
 </html>

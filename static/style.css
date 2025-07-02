@@ -460,7 +460,11 @@ svg#historyLineSvg {
   font-family: inherit;
 }
 
-#emojiInsert #emoji-btn {
+#emojiInsert_2 > #emoji-btn {
+  right: 23px;
+}
+
+#emoji-btn {
   position: absolute;
   right: 0px;
   background-color: transparent;

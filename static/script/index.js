@@ -122,6 +122,7 @@
       // 1) UI 전환
       startScreen.style.display = 'none';
       showRegisterBtn.style.display = 'none';
+      loginPopup.style.display = 'none';
       mainApp.style.display = 'flex';
       const placeName = localStorage.getItem('placeName')
       document.title = `콕집어 - ${placeName}`;
@@ -749,19 +750,4 @@
       });
   });
 
-  const emojiButton = document.querySelector('#emoji-btn');
-  const emojiInput = document.querySelector('#newPinEmoji');
-  const picker = new EmojiButton();
-  emojiButton.addEventListener('click', () => {
-      picker.togglePicker(emojiButton);
-  });
-  picker.on('emoji', emoji => {
-    const start = emojiInput.selectionStart;
-    const end = emojiInput.selectionEnd;
-    const text = emojiInput.value;
-    emojiInput.value = text.slice(0, start) + emoji + text.slice(end);
-    // 커서 위치 조정
-    emojiInput.selectionStart = emojiInput.selectionEnd = start + emoji.length;
-    emojiInput.focus();
-  })
 })();
