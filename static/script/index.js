@@ -728,17 +728,20 @@
           // 1) active 클래스 토글
           tabButtons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
+          const pins = document.querySelectorAll('.pin:not(.pinHistory)');
 
           // 2) 화면 전환 및 데이터 로드
           if (btn.dataset.tab === 'pinList') {
               pinListDiv.style.display = 'block';
               historyListDiv.style.display = 'none';
+              pins.forEach(pin => pin.style.display = 'block');
               renderPinList();
               // 히스토리 궤적만 제거
               document.querySelectorAll('.pinHistory').forEach(el => el.remove());
               document.querySelectorAll('.historyLine').forEach(el => el.remove());
           } else {
               pinListDiv.style.display = 'none';
+              pins.forEach(pin => pin.style.display = 'none');
               historyListDiv.style.display = 'block';
               // 히스토리 탭 클릭 시 즉시 궤적 그리기
               await loadHistory();
@@ -746,4 +749,19 @@
       });
   });
 
+  const emojiButton = document.querySelector('#emoji-btn');
+  const emojiInput = document.querySelector('#newPinEmoji');
+  const picker = new EmojiButton();
+  emojiButton.addEventListener('click', () => {
+      picker.togglePicker(emojiButton);
+  });
+  picker.on('emoji', emoji => {
+    const start = emojiInput.selectionStart;
+    const end = emojiInput.selectionEnd;
+    const text = emojiInput.value;
+    emojiInput.value = text.slice(0, start) + emoji + text.slice(end);
+    // 커서 위치 조정
+    emojiInput.selectionStart = emojiInput.selectionEnd = start + emoji.length;
+    emojiInput.focus();
+  })
 })();
