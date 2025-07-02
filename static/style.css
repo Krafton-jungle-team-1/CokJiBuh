@@ -120,6 +120,10 @@ html {
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
   overflow-y: auto;
   user-select: text;
+  margin-top: 0;
+  position: fixed;
+  top: 0;
+  z-index: 1000;
 }
 
 #sidebar h2 {
@@ -211,7 +215,6 @@ button.actionBtn:disabled {
   background: white;
   border-radius: 8px;
   padding: 10px 12px;
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -219,9 +222,11 @@ button.actionBtn:disabled {
   cursor: pointer;
   transition: background-color 0.2s;
   user-select: none;
+  width:  100%;
+  margin: 10px 15px;
 }
 .pinItem.active {
-  background: #ffd180;
+  background: #fff8e1;
 }
 
 .pinItem:hover {
@@ -321,6 +326,7 @@ button.actionBtn:disabled {
 }
 .pin:not(.pinHistory):after {
   content: attr(data-name);
+  text-align: center;
   white-space: nowrap;
   color: black;
   font-size: 15px;
@@ -375,7 +381,7 @@ svg#historyLineSvg {
 /* 도면 위 물건 추가 입력 박스 */
 #addPinPopup {
   position: absolute;
-  background: #fff3e0;
+  background: white;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   padding: 15px 18px;
@@ -390,7 +396,8 @@ svg#historyLineSvg {
 #addPinPopup input[type=text] {
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1.5px solid #e0a500;
+  border: none;
+  background-color: #F0F0F0;
   font-size: 15px;
   outline: none;
   width: 100%;
@@ -401,7 +408,7 @@ svg#historyLineSvg {
 #addPinPopup select {
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1.5px solid #e0a500;
+  border: none;
   font-size: 15px;
   outline: none;
   width: 100%;
@@ -412,7 +419,7 @@ svg#historyLineSvg {
 }
 
 #addPinPopup button {
-  background: #ff8c00;
+  background: #FFB74D;
   border: none;
   border-radius: 8px;
   color: white;
@@ -425,7 +432,7 @@ svg#historyLineSvg {
 }
 
 #addPinPopup button:hover {
-  background: #e65100;
+  background: #ffa726;
 }
 
 /* 편집 모달 */
@@ -550,6 +557,10 @@ svg#historyLineSvg {
 left: 276px;
 }
 
+.sidebar-visible #sidebar {
+  display: flex;
+}
+
 #mainApp.sidebar-collapsed #toggleSidebarBtn {
 left: 16px;
 }
@@ -591,6 +602,7 @@ background-color: #ffa726;
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
+  z-index: 999;
 }
 #loginBtn, #showRegisterBtn {
   padding: 6px 12px;

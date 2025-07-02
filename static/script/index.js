@@ -45,6 +45,7 @@
   const newPinEmojiInput = document.getElementById('newPinEmoji');
   const newPinColorSelect = document.getElementById('newPinColor');
   const confirmAddPinBtn = document.getElementById('confirmAddPinBtn');
+  const cancelAddPinBtn = document.getElementById('cancelAddPinBtn');
   const editModal = document.getElementById('editModal');
   const editPinName = document.getElementById('editPinName');
   const editPinEmoji = document.getElementById('editPinEmoji');
@@ -120,7 +121,12 @@
       // 1) UI 전환
       startScreen.style.display = 'none';
       mainApp.style.display = 'flex';
-      document.title = `콕집어 - ${localStorage.getItem('placeName')}`;
+      const placeName = localStorage.getItem('placeName')
+      document.title = `콕집어 - ${placeName}`;
+      const h2 = document.createElement('h2');
+      h2.textContent = placeName;
+      const tabmenu = document.querySelector('#tabMenu');
+      document.querySelector('#sidebar').insertBefore(h2, tabmenu);
 
       // 2) 로딩 스피너 켜고 onload 핸들러 준비
       loading.style.display = 'flex';
@@ -271,6 +277,17 @@
           registerMsg.style.color = 'red';
           registerMsg.textContent = '서버 연결 실패';
       }
+  });
+
+  toggleSidebarBtn.addEventListener('click', () => {
+    if(mainApp.classList.contains('sidebar-visible')){
+      mainApp.classList.remove('sidebar-visible');
+      mainApp.classList.add('sidebar-collapse');
+    }
+    else {
+      mainApp.classList.remove('sidebar-collapse');
+      mainApp.classList.add('sidebar-visible');
+    }
   });
 
   // --- 장소 업로드 (POST /api/places) ---
@@ -599,6 +616,13 @@
           alert('서버 오류');
       }
   });
+
+  cancelAddPinBtn.addEventListener('click', () => {
+    addPinPopup.style.display = 'none';
+    newPinNameInput.value = '';
+    newPinEmojiInput.value = '';
+    newPinColorSelect.value = '#ff8c00';
+  })
 
   // --- 편집 모달 열기/저장/삭제 ---
   function openEditModal(pin) {
