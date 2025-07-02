@@ -123,6 +123,8 @@
       mainApp.style.display = 'flex';
       const placeName = localStorage.getItem('placeName')
       document.title = `콕집어 - ${placeName}`;
+      const sidebar = document.querySelector('#sidebar');
+      sidebar.querySelectorAll('h2').forEach(el => el.remove());
       const h2 = document.createElement('h2');
       h2.textContent = placeName;
       const tabmenu = document.querySelector('#tabMenu');

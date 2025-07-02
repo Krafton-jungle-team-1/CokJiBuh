@@ -682,6 +682,10 @@ background-color: #ffa726;
   border-radius: 10px;
   cursor: pointer;
 }
+#loginPopup button:hover {
+  background-color: #ffa726;
+}
+
 #loginConfirmBtn {
   margin-top: 15px;
 }
