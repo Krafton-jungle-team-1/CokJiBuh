@@ -80,15 +80,15 @@
       <!-- 물건 추가 팝업 -->
       <div id="addPinPopup">
         <input type="text" id="newPinName" placeholder="물건 이름" />
-        <div id="emojiInsert"><input type="text" id="newPinEmoji" placeholder="이모지 (예: 📌)" /><button id="emoji-btn">&#9786;</button></div>
+        <input type="text" id="newPinEmoji" placeholder="이모지 (예: 📌)" />
         <select id="newPinColor">
+          
           <option value="#f44336">빨강</option>
           <option value="#ff8c00">주황</option>
           <option value="#4caf50">초록</option>
           <option value="#2196f3">파랑</option>
           <option value="#9c27b0">보라</option>
           <option value="#ffeb3b">노랑</option>
-
         </select>
         <button id="confirmAddPinBtn">추가</button>
         <button id="cancelAddPinBtn">취소</button>
@@ -99,7 +99,7 @@
   <!-- 편집 모달 -->
   <div id="editModal">
     <input type="text" id="editPinName" placeholder="물건 이름" />
-    <div id="emojiInsert_2"><input type="text" id="editPinEmoji" placeholder="이모지 (예: 📌)" /><button id="emoji-btn">&#9786;</button></div>
+    <input type="text" id="editPinEmoji" placeholder="이모지 (예: 📌)" />
     <textarea id="editPinComment" placeholder="코멘트"></textarea>
     <select id="editPinColor">
       <option value="#f44336">빨강</option>
@@ -115,8 +115,6 @@
       <button id="cancelBtn">취소</button>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@3.0.3/dist/index.min.js"></script>
-  <script src="/static/script/emojiLoader.js"></script>
   <script src="/static/script/index.js"></script>
 </body>
 

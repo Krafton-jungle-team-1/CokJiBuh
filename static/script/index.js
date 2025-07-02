@@ -107,7 +107,6 @@
   // --- 초기 화면/앱 화면 토글 ---
   function init() {
       startScreen.style.display = 'block';
-      showRegisterBtn.style.display = 'block';
       mainApp.style.display = 'none';
       loading.style.display = 'none';
       mainApp.classList.add('sidebar-visible');
@@ -224,13 +223,9 @@ function showAllPins() {
   async function initMainScreen() {
       // 1) UI 전환
       startScreen.style.display = 'none';
-      showRegisterBtn.style.display = 'none';
-      loginPopup.style.display = 'none';
       mainApp.style.display = 'flex';
       const placeName = localStorage.getItem('placeName')
       document.title = `콕집어 - ${placeName}`;
-      const sidebar = document.querySelector('#sidebar');
-      sidebar.querySelectorAll('h2').forEach(el => el.remove());
       const h2 = document.createElement('h2');
       h2.textContent = placeName;
       const tabmenu = document.querySelector('#tabMenu');
@@ -390,10 +385,10 @@ function showAllPins() {
   toggleSidebarBtn.addEventListener('click', () => {
     if(mainApp.classList.contains('sidebar-visible')){
       mainApp.classList.remove('sidebar-visible');
-      mainApp.classList.add('sidebar-collapsed');
+      mainApp.classList.add('sidebar-collapse');
     }
     else {
-      mainApp.classList.remove('sidebar-collapsed');
+      mainApp.classList.remove('sidebar-collapse');
       mainApp.classList.add('sidebar-visible');
     }
   });
@@ -445,10 +440,10 @@ function showAllPins() {
                   mainApp.style.display = 'flex';
                   document.title = `콕집어 - ${placeName}`;
 
-                //   const h2 = document.createElement('h2');
-                //   h2.textContent = placeName;
-                //   const tabmenu = document.querySelector('#tabMenu');
-                //   document.querySelector('#sidebar').insertBefore(h2, tabmenu);
+                  const h2 = document.createElement('h2');
+                  h2.textContent = placeName;
+                  const tabmenu = document.querySelector('#tabMenu');
+                  document.querySelector('#sidebar').insertBefore(h2, tabmenu);
 
                   await loadPins();
                   await loadHistory();
@@ -540,15 +535,9 @@ try {
       pin.style.left = `${x}px`;
       pin.style.top = `${y}px`;
       pin.style.backgroundColor = pinData.color || '#ff8c00';
-    //   pin.setProperty('--pin-bg-color', pinData.color);
       pin.textContent = pinData.emoji || '📌';
       pin.dataset.id = pinData.id;
-      pin.dataset.name = pinData.name;
-      const style = document.createElement('style');
-      style.textContent = `
-        .pin[data-id="${pinData.id}"]::after {
-        background-color: ${pinData.color};}`;
-      document.head.appendChild(style);
+      pin.dataset.color = pinData.color || '#ff8c00'; 
 
       let offsetX, offsetY, dragging = false;
 
@@ -630,10 +619,7 @@ try {
           div.className = 'pinItem';
           div.dataset.id = pin.id;
           div.innerHTML = `
-        <div class="pinEmoji">${pin.emoji || '📌'}</div>
-        <div class="pinName">${pin.name}</div>
-        <div class="pinStatus"></div>
-        `;
+        <div class="pinEmoji">${pin.emoji || '📌'}</div><div class="pinName">${pin.name}</div>`;
           div.addEventListener('click', (e) => {
               const siblings = e.currentTarget.parentNode.querySelectorAll('.pinItem');
               siblings.forEach(el => el.classList.remove('active'));
@@ -710,7 +696,7 @@ try {
       addPinPopup.style.top = (floorplanContainer.clientHeight / 2 - addPinPopup.clientHeight / 2) + 'px';
       newPinNameInput.value = '';
       newPinEmojiInput.value = '';
-      newPinColorSelect.value = '#ffb347';
+      newPinColorSelect.value = '#ff8c00';
   });
 // 핀 추가 시 중앙 좌표로 고정
 confirmAddPinBtn.addEventListener('click', async () => {
@@ -748,7 +734,7 @@ confirmAddPinBtn.addEventListener('click', async () => {
     addPinPopup.style.display = 'none';
     newPinNameInput.value = '';
     newPinEmojiInput.value = '';
-    newPinColorSelect.value = '#ffb347';
+    newPinColorSelect.value = '#ff8c00';
   })
 
   // --- 편집 모달 열기/저장/삭제 ---
@@ -842,20 +828,17 @@ confirmAddPinBtn.addEventListener('click', async () => {
           // 1) active 클래스 토글
           tabButtons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          const pins = document.querySelectorAll('.pin:not(.pinHistory)');
 
           // 2) 화면 전환 및 데이터 로드
           if (btn.dataset.tab === 'pinList') {
               pinListDiv.style.display = 'block';
               historyListDiv.style.display = 'none';
-              pins.forEach(pin => pin.style.display = 'block');
               renderPinList();
               // 히스토리 궤적만 제거
               document.querySelectorAll('.pinHistory').forEach(el => el.remove());
               document.querySelectorAll('.historyLine').forEach(el => el.remove());
           } else {
               pinListDiv.style.display = 'none';
-              pins.forEach(pin => pin.style.display = 'none');
               historyListDiv.style.display = 'block';
               // 히스토리 탭 클릭 시 즉시 궤적 그리기
               await loadHistory();
