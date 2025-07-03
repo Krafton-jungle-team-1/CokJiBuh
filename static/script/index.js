@@ -188,9 +188,9 @@
 
 // 핀 색상 필터링 함수
 function filterPinsByColor(color) {
-  document.querySelectorAll('.pin').forEach(pin => {
+  document.querySelectorAll('.pin:not(.pinHistory)').forEach(pin => {
     if (pin.dataset.color === color) {
-      pin.style.display = 'block';
+      pin.style.display = 'flex';
     } else {
       pin.style.display = 'none';
     }
@@ -208,8 +208,8 @@ function filterPinsByColor(color) {
 
 // 모든 핀 보이기 함수
 function showAllPins() {
-  document.querySelectorAll('.pin').forEach(pin => {
-    pin.style.display = 'block';
+  document.querySelectorAll('.pin:not(.pinHistory)').forEach(pin => {
+    pin.style.display = 'flex';
   });
    document.querySelectorAll('.pinItem').forEach(item => {
     item.style.display = 'flex';
@@ -544,6 +544,7 @@ try {
       pin.textContent = pinData.emoji || '📌';
       pin.dataset.id = pinData.id;
       pin.dataset.name = pinData.name;
+      pin.dataset.color = pinData.color;
       const style = document.createElement('style');
       style.textContent = `
         .pin[data-id="${pinData.id}"]::after {
