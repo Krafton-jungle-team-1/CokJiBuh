@@ -7,15 +7,11 @@
   async function bootstrap() {
       const t = localStorage.getItem('token');
       const u = localStorage.getItem('username');
-      const pId = localStorage.getItem('placeId');
       if (t && u) {
           authToken = t;
           setLoggedIn(u);
-          if (pId) {
-              currentPlaceId = pId;
-              await fetchLastPlaceAndInit();
-              return;
-          }
+          await fetchLastPlaceAndInit();
+          return;
       }
       init();
   }
@@ -27,6 +23,8 @@
   let myHistory = [];
   let selectedPin = null;
   let isMovingPin = false;
+    let lastClickedX = null;
+    let lastClickedY = null;
 
   // --- DOM 요소 ---
   const startScreen = document.getElementById('startScreen');
@@ -112,7 +110,108 @@
       console.log('startScreen', startScreen);
       console.log('mainApp', mainApp);
       console.log('loading', loading);
+      addColorFilterButtons();
   }
+ function addColorFilterButtons() {
+  const pinListDiv = document.getElementById('pinList');
+  if (!pinListDiv) return;
+
+  const existingContainer = document.getElementById('pinFilterContainer');
+  if (existingContainer) {
+    existingContainer.remove();
+  }
+
+  const container = document.createElement('div');
+  container.id = 'pinFilterContainer';
+  container.style.padding = '5px 10px';
+  container.style.textAlign = 'center';
+  container.style.backgroundColor = '#f5a623'; // 주황 계열 배경
+
+  const colors = [
+    { code: '#f44336', name: '빨강' },
+    { code: '#ff8c00', name: '주황' },
+    { code: '#ffeb3b', name: '노랑' },
+    { code: '#4caf50', name: '초록' },
+    { code: '#2196f3', name: '파랑' },
+    { code: '#9c27b0', name: '보라' },
+  ];
+
+  colors.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'colorFilterBtn';
+    btn.dataset.color = c.code;
+    btn.title = c.name;
+    btn.style.backgroundColor = c.code;
+    btn.style.width = '24px';
+    btn.style.height = '24px';
+    btn.style.border = 'none';
+    btn.style.borderRadius = '50%';
+    btn.style.margin = '0 4px';
+    btn.style.cursor = 'pointer';
+    btn.style.verticalAlign = 'middle';
+    btn.style.boxShadow = '0 0 3px rgba(0,0,0,0.3)';
+    container.appendChild(btn);
+  });
+
+  // 전체보기 버튼
+  const clearBtn = document.createElement('button');
+  clearBtn.id = 'clearFilterBtn';
+  clearBtn.textContent = '전체';
+  clearBtn.style.marginLeft = '12px';
+  clearBtn.style.padding = '4px 8px';
+  clearBtn.style.border = 'none';
+  clearBtn.style.borderRadius = '4px';
+  clearBtn.style.cursor = 'pointer';
+  clearBtn.style.backgroundColor = '#fff';
+  clearBtn.style.color = '#f57c00';
+  clearBtn.style.fontWeight = 'bold';
+  container.appendChild(clearBtn);
+
+  // pinListDiv 바로 위에 삽입
+  pinListDiv.parentNode.insertBefore(container, pinListDiv);
+
+  // 필터 버튼 클릭 이벤트
+  container.querySelectorAll('.colorFilterBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const color = btn.dataset.color;
+      filterPinsByColor(color);
+    });
+  });
+  clearBtn.addEventListener('click', () => {
+    showAllPins();
+  });
+}
+
+// 핀 색상 필터링 함수
+function filterPinsByColor(color) {
+  document.querySelectorAll('.pin:not(.pinHistory)').forEach(pin => {
+    if (pin.dataset.color === color) {
+      pin.style.display = 'flex';
+    } else {
+      pin.style.display = 'none';
+    }
+  });
+
+  document.querySelectorAll('.pinItem').forEach(item => {
+    if (item.dataset.color === color) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+
+// 모든 핀 보이기 함수
+function showAllPins() {
+  document.querySelectorAll('.pin:not(.pinHistory)').forEach(pin => {
+    pin.style.display = 'flex';
+  });
+   document.querySelectorAll('.pinItem').forEach(item => {
+    item.style.display = 'flex';
+  });
+}
+
   bootstrap();
 
   // 두 번째 화면 초기화: 사진 띄우고 핀·히스토리 로드
@@ -382,40 +481,47 @@
       }
   }
 
+  async function savePinToDB(pinData) {
+  const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`
+    },
+    body: JSON.stringify(pinData)
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    alert("핀 저장 실패: " + err.error);
+  } else {
+    const savedPin = await res.json();
+    console.log("핀 저장됨:", savedPin);
+  }
+}
+
+
   // --- 히스토리 불러오기 ---
   async function loadHistory() {
       if (!currentPlaceId) return;
       myHistory = [];
-      // try {
-      //   const res = await apiFetch(`/api/places/${currentPlaceId}/history`);
-      //   const arr = await res.json();
-      //   if (res.ok) {
-      //     history = arr.map(h => ({
-      //       time: new Date(h.time).getTime(),
-      //       text: `물건 위치가 변경되었습니다.`
-      //     }));
-      //     renderHistory();
-      //   }
-      // } catch {
-      //   alert('히스토리 불러오기 실패');
-      // }
-      try {
-          for (const pin of pins) {
-              const res = await apiFetch(`/items/${pin.id}/move`);
-              const arr = await res.json();
-              arr.sort((a, b) => a._id.localeCompare(b._id));
-              console.log("히스토리 목록 불러옴", arr);
-              if (res.ok) {
-                  myHistory.push(arr.map(h => ({
-                      x: h.newX,
-                      y: h.newY,
-                  })));
-              }
-          }
-          renderHistory();
-      } catch {
-          alert('히스토리 불러오기 실패');
+try {
+  for (const pin of pins) {
+      const res = await apiFetch(`/items/${pin.id}/move`);
+      const arr = await res.json();
+      arr.sort((a, b) => a._id.localeCompare(b._id));
+      if (res.ok) {
+          myHistory.push(arr.map(h => ({
+              x: h.newX,
+              y: h.newY,
+          })));
       }
+  }
+  renderHistory();
+} catch {
+  alert('히스토리 불러오기 실패');
+}
+
   }
 
   // --- 핀 화면에서 모두 지우기 ---
@@ -434,6 +540,7 @@
       pin.textContent = pinData.emoji || '📌';
       pin.dataset.id = pinData.id;
       pin.dataset.name = pinData.name;
+      pin.dataset.color = pinData.color;
       const style = document.createElement('style');
       style.textContent = `
         .pin[data-id="${pinData.id}"]::after {
@@ -461,54 +568,56 @@
           pin.style.top = `${newY}px`;
       });
       document.addEventListener('mouseup', async e => {
-          if (!dragging) return;
-          dragging = false;
-          pin.classList.remove('dragging');
-          const id = pin.dataset.id;
-          const idx = pins.findIndex(p => p.id === id);
-          if (idx === -1) return;
-          pins[idx].x = parseInt(pin.style.left);
-          pins[idx].y = parseInt(pin.style.top);
-          try {
-              // 핀 위치 수정 API
-              await apiFetch(`/items/${id}/move`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ newX: pins[idx].x, newY: pins[idx].y })
-              });
-              // 히스토리 생성 API
-              await apiFetch(`/api/places/${currentPlaceId}/history`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
-              });
-              console.log(`물건 "${pins[idx].name}" 위치 변경됨.`);
-              loadHistory();
-              renderHistory();
-              renderPinList();
-          } catch {
-              alert('위치 저장 실패');
-          }
+  if (!dragging) return;
+  dragging = false;
+  pin.classList.remove('dragging');
+  const id = pin.dataset.id;
+  const idx = pins.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  pins[idx].x = parseInt(pin.style.left);
+  pins[idx].y = parseInt(pin.style.top);
+  try {
+      await apiFetch(`/items/${id}/move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newX: pins[idx].x, newY: pins[idx].y })
       });
+      await apiFetch(`/api/places/${currentPlaceId}/history`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
+      });
+      loadHistory();
+      renderHistory();
+      renderPinList();
+  } catch {
+      alert('위치 저장 실패');
+  }
+});
+
 
       floorplanContainer.appendChild(pin);
   }
 
   // --- 물건 리스트 렌더링 ---
-  function renderPinList() {
-      pinListDiv.innerHTML = '';
-      pins.forEach(pin => {
-          const div = document.createElement('div');
-          div.className = 'pinItem';
-          div.dataset.id = pin.id;
-          div.innerHTML = `
+ function renderPinList() {
+  pinListDiv.innerHTML = '';
+  pins.forEach(pin => {
+    const div = document.createElement('div');
+    div.className = 'pinItem';
+    div.dataset.id = pin.id;
+    div.dataset.color = pin.color;
+    div.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
         <div class="pinEmoji">${pin.emoji || '📌'}</div>
         <div class="pinName">${pin.name}</div>
-        <div class="pinStatus">${pin.comment ? '코멘트 있음' : ''}</div>`;
-          div.addEventListener('click', () => openEditModal(pin));
-          pinListDiv.appendChild(div);
-      });
-  }
+      </div>
+      <div class="pinStatus">${pin.comment ? '코멘트 있음' : ''}</div>
+    `;
+    div.addEventListener('click', () => openEditModal(pin));
+    pinListDiv.appendChild(div);
+  });
+}
 
   // --- 히스토리 렌더링 ---
   function renderHistory() {
@@ -598,38 +707,39 @@
       addPinPopup.style.top = (floorplanContainer.clientHeight / 2 - addPinPopup.clientHeight / 2) + 'px';
       newPinNameInput.value = '';
       newPinEmojiInput.value = '';
-      newPinColorSelect.value = '#ffb347';
+      newPinColorSelect.value = '#f44336';
   });
-  confirmAddPinBtn.addEventListener('click', async () => {
-      const name = newPinNameInput.value.trim();
-      const emoji = newPinEmojiInput.value.trim() || '';
-      const color = newPinColorSelect.value;
-      if (!name) { alert('물건 이름을 입력하세요.'); return; }
-      if (!currentPlaceId) { alert('장소가 선택되지 않았습니다.'); return; }
-      const x = floorplanContainer.clientWidth / 2 - 16;
-      const y = floorplanContainer.clientHeight / 2 - 16;
-      try {
-          const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name, emoji, color, x, y })
-          });
-          const data = await res.json();
-          if (res.ok) {
-              const p = { id: data._id, name: data.name, emoji: data.emoji, color: data.color, x: data.x, y: data.y, comment: data.comment };
-              pins.push(p);
-              createPin(p.x, p.y, p);
-              renderPinList();
-              addPinPopup.style.display = 'none';
-              console.log(`물건 "${name}" 추가됨.`);
-              renderHistory();
-          } else {
-              alert(data.error || '추가 실패');
-          }
-      } catch {
-          alert('서버 오류');
+// 핀 추가 시 중앙 좌표로 고정
+confirmAddPinBtn.addEventListener('click', async () => {
+  const name = newPinNameInput.value.trim();
+  const emoji = newPinEmojiInput.value.trim() || '';
+  const color = newPinColorSelect.value;
+  if (!name) { alert('물건 이름을 입력하세요.'); return; }
+  if (!currentPlaceId) { alert('장소가 선택되지 않았습니다.'); return; }
+  const x = floorplanContainer.clientWidth / 2 - 16;
+  const y = floorplanContainer.clientHeight / 2 - 16;
+  try {
+      const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, emoji, color, x, y })
+      });
+      const data = await res.json();
+      if (res.ok) {
+          const p = { id: data._id, name: data.name, emoji: data.emoji, color: data.color, x: data.x, y: data.y, comment: data.comment };
+          pins.push(p);
+          createPin(p.x, p.y, p);
+          renderPinList();
+          addPinPopup.style.display = 'none';
+          renderHistory();
+      } else {
+          alert(data.error || '추가 실패');
       }
-  });
+  } catch {
+      alert('서버 오류');
+  }
+});
+
 
   cancelAddPinBtn.addEventListener('click', () => {
     addPinPopup.style.display = 'none';
@@ -750,4 +860,7 @@
       });
   });
 
+  window.addEventListener('load', () => {
+  init();
+});
 })();

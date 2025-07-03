@@ -255,11 +255,25 @@ def move_item(user, itemId):
     if 'newX' not in data or 'newY' not in data:
         print("Missing X or Y")
         return jsonify({'error': "Missing 'newX' or 'newY'"}), 400
+
+    # 이동 기록 저장
     log = {'username': user, 'itemId': itemId,
            'newX': data['newX'], 'newY': data['newY'], 'movedAt': datetime.utcnow()}
     res = db.changeLocation.insert_one(log)
     print(f"Inserted: {res.inserted_id}")
+
+    # pins 콜렉션 내 핀 위치 업데이트 (추가)
+    try:
+        db.pins.update_one(
+            {'_id': ObjectId(itemId), 'username': user},
+            {'$set': {'x': data['newX'], 'y': data['newY']}}
+        )
+        print(f"Pin {itemId} position updated to ({data['newX']}, {data['newY']})")
+    except Exception as e:
+        print(f"Error updating pin position: {e}")
+
     return jsonify({'success': True, 'id': str(res.inserted_id)}), 201
+
 
 # ---------------- 마지막 장소 설정 ----------------
 @app.route('/api/last_place', methods=['PUT'])

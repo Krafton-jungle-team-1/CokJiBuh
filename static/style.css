@@ -63,7 +63,7 @@ html {
   font-size: 16px;
   border: none;
   border-radius: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   transition: border-color 0.3s;
   height: 50px;
 }
@@ -221,6 +221,7 @@ button.actionBtn:disabled {
   border-radius: 8px;
   padding: 10px 12px;
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 10px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -237,6 +238,10 @@ button.actionBtn:disabled {
 
 .pinItem:hover {
   background-color: #fff8e1;
+}
+
+.pinEmoji {
+  margin-right: 8px; /* 이모지와 글자 사이 간격 */
 }
 
 .pinEmoji {
@@ -768,3 +773,16 @@ background-color: #ffa726;
 #registerCloseBtn {
   margin-top: 5px;
 }
+
+#pinFilterContainer {
+  padding: 6px 0;
+  text-align: center;
+  border-bottom: 1px solid #ffb74d; /* 연한 주황색 선 */
+  margin-bottom: 6px;
+}
+
+.colorFilterBtn:focus {
+  outline: 2px solid #ff8c00;
+  outline-offset: 2px;
+}
+
