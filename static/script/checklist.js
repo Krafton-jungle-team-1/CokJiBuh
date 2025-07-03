@@ -44,7 +44,7 @@ function paintCheckList(item){
 export function loadCheckList(){
     checklistContent.innerHTML = '';
     const storedChecklist = JSON.parse(localStorage.getItem('checklist'));
-    checklistItems = storedChecklist;
+    checklistItems = storedChecklist || [];
     console.log(storedChecklist);
     if(storedChecklist) {
         storedChecklist.forEach(item => {
