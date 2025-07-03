@@ -1,5 +1,5 @@
 // signTotal
-
+import { loadCheckList } from './checklist.js';
 
 (() => {
 
@@ -276,14 +276,15 @@
         const tabmenu = document.querySelector('#tabMenu');
         document.querySelector('#sidebar').insertBefore(h2, tabmenu);
 
-        // 2) 로딩 스피너 켜고 onload 핸들러 준비
-        loading.style.display = 'flex';
-        floorplan.onload = () => {
-            loading.style.display = 'none';
-            floorplan.style.display = 'block';
-            loadPins();
-            loadHistory();
-        };
+      // 2) 로딩 스피너 켜고 onload 핸들러 준비
+      loading.style.display = 'flex';
+      floorplan.onload = () => {
+          loading.style.display = 'none';
+          floorplan.style.display = 'block';
+          loadCheckList();
+          loadPins();
+          loadHistory();
+      };
 
         // 3) fetch + blob → img.src 로 설정 (토큰 자동 포함)
         const res = await fetch(
