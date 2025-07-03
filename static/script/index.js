@@ -656,7 +656,7 @@
     div.dataset.id = pin.id;
     div.dataset.color = pin.color;
     div.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+      <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
         <div class="pinEmoji">${pin.emoji || '📌'}</div><div class="pinName">${pin.name}</div>
       </div>
       <div class="pinStatus">${pin.comment ? '코멘트 있음' : ''}</div>

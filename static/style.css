@@ -203,6 +203,12 @@ button.actionBtn:disabled {
   cursor: default;
 }
 
+#searchInput {
+  border: none;
+  border-radius: 8px;
+  outline: none;
+}
+
 /* 물건 리스트 */
 #pinList {
   flex: 1;
