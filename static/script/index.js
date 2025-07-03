@@ -114,6 +114,7 @@
       console.log('mainApp', mainApp);
       console.log('loading', loading);
       addColorFilterButtons();
+       addSearchInputOnly();
   }
  function addColorFilterButtons() {
   const pinListDiv = document.getElementById('pinList');
@@ -581,6 +582,7 @@ try {
       pin.textContent = pinData.emoji || '📌';
       pin.dataset.id = pinData.id;
       pin.dataset.color = pinData.color || '#ff8c00'; 
+      
 
       let offsetX, offsetY, dragging = false;
 
@@ -650,6 +652,42 @@ try {
     `;
     div.addEventListener('click', () => openEditModal(pin));
     pinListDiv.appendChild(div);
+  });
+}
+function addSearchInputOnly() {
+  const pinListDiv = document.getElementById('pinList');
+  if (!pinListDiv) return;
+
+  // 중복 방지: 기존 검색창 제거
+  const existingInput = document.getElementById('searchInputOnly');
+  if (existingInput) existingInput.remove();
+
+  const searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.id = 'searchInputOnly';
+  searchInput.placeholder = '물건명 또는 이모지 검색';
+  searchInput.style.width = '90%';
+  searchInput.style.margin = '10px auto';
+  searchInput.style.display = 'block';
+  searchInput.style.padding = '6px 8px';
+  searchInput.style.fontSize = '14px';
+
+  // 삽입
+  pinListDiv.parentNode.insertBefore(searchInput, pinListDiv);
+
+  // 검색 이벤트
+  searchInput.addEventListener('input', () => {
+    const keyword = searchInput.value.trim().toLowerCase();
+    pins.forEach(pin => {
+      const match =
+        !keyword ||
+        pin.name.toLowerCase().includes(keyword) ||
+        (pin.emoji && pin.emoji.includes(keyword));
+      const pinEl = document.querySelector(`.pin[data-id="${pin.id}"]`);
+      const listEl = document.querySelector(`.pinItem[data-id="${pin.id}"]`);
+      if (pinEl) pinEl.style.display = match ? 'block' : 'none';
+      if (listEl) listEl.style.display = match ? 'flex' : 'none';
+    });
   });
 }
 
@@ -881,7 +919,7 @@ confirmAddPinBtn.addEventListener('click', async () => {
               document.querySelectorAll('.historyLine').forEach(el => el.remove());
           } else {
               pinListDiv.style.display = 'none';
-              historyListDiv.style.dgitisplay = 'block';
+              historyListDiv.style.display = 'block';
               // 히스토리 탭 클릭 시 즉시 궤적 그리기
               await loadHistory();
           }
