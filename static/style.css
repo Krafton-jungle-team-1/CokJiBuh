@@ -235,6 +235,10 @@ button.actionBtn:disabled {
   background: #fff8e1;
 }
 
+.pinEmoji {
+  margin-right: 8px; /* 이모지와 글자 사이 간격 */
+}
+
 .pinItem:hover {
   background-color: #fff8e1;
 }
@@ -257,10 +261,9 @@ button.actionBtn:disabled {
   font-size: 16px;
   color: #4e342e;
   user-select: text;
-  min-width: 0;
+   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .pinStatus {
