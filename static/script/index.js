@@ -711,7 +711,7 @@ try {
       addPinPopup.style.top = (floorplanContainer.clientHeight / 2 - addPinPopup.clientHeight / 2) + 'px';
       newPinNameInput.value = '';
       newPinEmojiInput.value = '';
-      newPinColorSelect.value = '#ffb347';
+      newPinColorSelect.value = '#f44336';
   });
 // 핀 추가 시 중앙 좌표로 고정
 confirmAddPinBtn.addEventListener('click', async () => {
