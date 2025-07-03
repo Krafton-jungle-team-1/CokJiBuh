@@ -15,7 +15,7 @@ import { loadCheckList } from './checklist.js';
         }
         init();
     }
-    // --- 상태 변수 ---
+    // — 상태 변수 —
     let currentUser = null;
     let authToken = null;
     let currentPlaceId = null;
@@ -26,7 +26,7 @@ import { loadCheckList } from './checklist.js';
     let lastClickedX = null;
     let lastClickedY = null;
 
-    // --- DOM 요소 ---
+    // — DOM 요소 —
     const startScreen = document.getElementById('startScreen');
     const placeNameInput = document.getElementById('placeNameInput');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -100,150 +100,125 @@ import { loadCheckList } from './checklist.js';
         renderHistory();
     }
 
-  // --- 초기 화면/앱 화면 토글 ---
-  function init() {
-      startScreen.style.display = 'block';
-      mainApp.style.display = 'none';
-      loading.style.display = 'none';
-      showRegisterBtn.style.display = 'block';
-      mainApp.classList.add('sidebar-visible');
-      console.log('startScreen', startScreen);
-      console.log('mainApp', mainApp);
-      console.log('loading', loading);
-      addColorFilterButtons();
-       addSearchInputOnly();
-  }
- function addColorFilterButtons() {
-  const pinListDiv = document.getElementById('pinList');
-  if (!pinListDiv) return;
+    // --- 초기 화면/앱 화면 토글 ---
+    function init() {
+        startScreen.style.display = 'block';
+        mainApp.style.display = 'none';
+        loading.style.display = 'none';
+        showRegisterBtn.style.display = 'block';
+        mainApp.classList.add('sidebar-visible');
+        console.log('startScreen', startScreen);
+        console.log('mainApp', mainApp);
+        console.log('loading', loading);
+        addColorFilterButtons();
+        addSearchInputOnly();
+    }
+    function addColorFilterButtons() {
+        const pinListDiv = document.getElementById('pinList');
+        if (!pinListDiv) return;
 
+        // 이미 있으면 제거
         const existingContainer = document.getElementById('pinFilterContainer');
         if (existingContainer) {
             existingContainer.remove();
         }
 
+        // 컨테이너 생성
         const container = document.createElement('div');
         container.id = 'pinFilterContainer';
         container.style.padding = '5px 10px';
         container.style.textAlign = 'center';
-        container.style.backgroundColor = '#f5a623'; // 주황 계열 배경
+        container.style.backgroundColor = '#f5a623';
+        pinListDiv.parentNode.insertBefore(container, pinListDiv);
 
-  // 1. 검색 input 추가
-  const searchInput = document.createElement('input');
-  searchInput.type = 'text';
-  searchInput.id = 'searchInput';
-  searchInput.placeholder = '검색어 입력';
-  searchInput.style.width = '90%';
-  searchInput.style.padding = '6px 8px';
-  searchInput.style.marginBottom = '8px';
-  searchInput.style.fontSize = '14px';
-  container.appendChild(searchInput);
+        // 검색 input
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.id = 'searchInput';
+        searchInput.placeholder = '검색어 입력';
+        searchInput.style.cssText = 'width:90%; padding:6px 8px; margin-bottom:8px; font-size:14px;';
+        container.appendChild(searchInput);
 
-  // 2. 기존 색상 버튼 추가
-  const colors = [
-    { code: '#f44336', name: '빨강' },
-    { code: '#ff8c00', name: '주황' },
-    { code: '#ffeb3b', name: '노랑' },
-    { code: '#4caf50', name: '초록' },
-    { code: '#2196f3', name: '파랑' },
-    { code: '#9c27b0', name: '보라' },
-  ];
-
+        // 색상 버튼
+        const colors = [
+            { code: '#f44336', name: '빨강' },
+            { code: '#ff8c00', name: '주황' },
+            { code: '#ffeb3b', name: '노랑' },
+            { code: '#4caf50', name: '초록' },
+            { code: '#2196f3', name: '파랑' },
+            { code: '#9c27b0', name: '보라' },
+        ];
         colors.forEach(c => {
             const btn = document.createElement('button');
             btn.className = 'colorFilterBtn';
             btn.dataset.color = c.code;
             btn.title = c.name;
-            btn.style.backgroundColor = c.code;
-            btn.style.width = '24px';
-            btn.style.height = '24px';
-            btn.style.border = 'none';
-            btn.style.borderRadius = '50%';
-            btn.style.margin = '0 4px';
-            btn.style.cursor = 'pointer';
-            btn.style.verticalAlign = 'middle';
-            btn.style.boxShadow = '0 0 3px rgba(0,0,0,0.3)';
+            btn.style.cssText = `
+                background-color: ${c.code};
+                width:24px; height:24px; border:none; border-radius:50%;
+                margin:0 4px; cursor:pointer; vertical-align:middle;
+                box-shadow:0 0 3px rgba(0,0,0,0.3);
+            `;
             container.appendChild(btn);
         });
 
-  // 3. 전체보기 버튼
-  const clearBtn = document.createElement('button');
-  clearBtn.id = 'clearFilterBtn';
-  clearBtn.textContent = '전체';
-  clearBtn.style.marginLeft = '12px';
-  clearBtn.style.padding = '4px 8px';
-  clearBtn.style.border = 'none';
-  clearBtn.style.borderRadius = '4px';
-  clearBtn.style.cursor = 'pointer';
-  clearBtn.style.backgroundColor = '#fff';
-  clearBtn.style.color = '#f57c00';
-  clearBtn.style.fontWeight = 'bold';
-  container.appendChild(clearBtn);
+        // 전체보기 버튼
+        const clearBtn = document.createElement('button');
+        clearBtn.id = 'clearFilterBtn';
+        clearBtn.textContent = '전체';
+        clearBtn.style.cssText = `
+            margin-left:12px; padding:4px 8px; border:none;
+            border-radius:4px; cursor:pointer; background-color:#fff;
+            color:#f57c00; font-weight:bold;
+        `;
+        container.appendChild(clearBtn);
 
-  // pinListDiv 바로 위에 삽입
-  pinListDiv.parentNode.insertBefore(container, pinListDiv);
+        // 상태 변수
+        let currentColorFilter = null;
 
-  // 현재 선택된 색상 저장 변수
-  let currentColorFilter = null;
+        // 필터링 함수
+        function applyFilters() {
+            const keyword = searchInput.value.trim().toLowerCase();
+            const activeTab = document.querySelector('.tabButton.active').dataset.tab;
 
-  // 검색어와 색상 필터 동시에 적용하는 함수
-  function applyFilters() {
-    const keyword = searchInput.value.trim().toLowerCase();
+            if (activeTab === 'pinList') {
+                // 핀 + 리스트
+                pins.forEach(pin => {
+                    const matchColor = !currentColorFilter || pin.color === currentColorFilter;
+                    const matchKeyword = !keyword ||
+                        pin.name.toLowerCase().includes(keyword) ||
+                        (pin.emoji && pin.emoji.includes(keyword));
+                    const show = matchColor && matchKeyword;
+                    const pinEl = document.querySelector(`.pin[data-id="${pin.id}"]`);
+                    const listEl = document.querySelector(`.pinItem[data-id="${pin.id}"]`);
+                    if (pinEl) pinEl.style.display = show ? 'block' : 'none';
+                    if (listEl) listEl.style.display = show ? 'flex' : 'none';
+                });
+            } else {
+                // 히스토리 목록만
+                document.querySelectorAll('#historyList .pinItem').forEach(item => {
+                    const clr = item.dataset.color;
+                    item.style.display = (!currentColorFilter || clr === currentColorFilter) ? 'flex' : 'none';
+                });
+            }
+        }
 
-    pins.forEach(pin => {
-      const matchColor = !currentColorFilter || pin.color === currentColorFilter;
-      const matchKeyword =
-        !keyword ||
-        pin.name.toLowerCase().includes(keyword) ||
-        (pin.emoji && pin.emoji.includes(keyword));
-      const show = matchColor && matchKeyword;
-
-      const pinEl = document.querySelector(`.pin[data-id="${pin.id}"]`);
-      const listEl = document.querySelector(`.pinItem[data-id="${pin.id}"]`);
-      if (pinEl) pinEl.style.display = show ? 'block' : 'none';
-      if (listEl) listEl.style.display = show ? 'flex' : 'none';
-    });
-  }
-
-  // 필터 버튼 클릭 이벤트
-  container.querySelectorAll('.colorFilterBtn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentColorFilter = btn.dataset.color;
-      applyFilters();
-    });
-  });
-
-  // 전체보기 버튼 클릭
-  clearBtn.addEventListener('click', () => {
-    currentColorFilter = null;
-    searchInput.value = '';
-    applyFilters();
-  });
-
-  // 검색 input 이벤트
-  searchInput.addEventListener('input', () => {
-    applyFilters();
-  });
-}
+        // 이벤트 바인딩
+        container.querySelectorAll('.colorFilterBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentColorFilter = btn.dataset.color;
+                applyFilters();
+            });
+        });
+        clearBtn.addEventListener('click', () => {
+            currentColorFilter = null;
+            searchInput.value = '';
+            applyFilters();
+        });
+        searchInput.addEventListener('input', applyFilters);
+    }
 
     // 핀 색상 필터링 함수
-    function filterPinsByColor(color) {
-        document.querySelectorAll('.pin:not(.pinHistory)').forEach(pin => {
-            if (pin.dataset.color === color) {
-                pin.style.display = 'flex';
-            } else {
-                pin.style.display = 'none';
-            }
-        });
-
-        document.querySelectorAll('.pinItem').forEach(item => {
-            if (item.dataset.color === color) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    }
 
 
     // 모든 핀 보이기 함수
@@ -276,15 +251,15 @@ import { loadCheckList } from './checklist.js';
         const tabmenu = document.querySelector('#tabMenu');
         document.querySelector('#sidebar').insertBefore(h2, tabmenu);
 
-      // 2) 로딩 스피너 켜고 onload 핸들러 준비
-      loading.style.display = 'flex';
-      floorplan.onload = () => {
-          loading.style.display = 'none';
-          floorplan.style.display = 'block';
-          loadCheckList();
-          loadPins();
-          loadHistory();
-      };
+        // 2) 로딩 스피너 켜고 onload 핸들러 준비
+        loading.style.display = 'flex';
+        floorplan.onload = () => {
+            loading.style.display = 'none';
+            floorplan.style.display = 'block';
+            loadCheckList();
+            loadPins();
+            loadHistory();
+        };
 
         // 3) fetch + blob → img.src 로 설정 (토큰 자동 포함)
         const res = await fetch(
@@ -317,7 +292,7 @@ import { loadCheckList } from './checklist.js';
         init();
     }
 
-    // --- 로그인 버튼 클릭 핸들러 ---
+    // — 로그인 버튼 클릭 핸들러 —
     loginBtn.addEventListener('click', () => {
         if (authToken) {
             if (!confirm('로그아웃 하시겠습니까?')) return;
@@ -342,7 +317,7 @@ import { loadCheckList } from './checklist.js';
         passwordInput.value = '';
     })
 
-    // --- 로그인 제출 ---
+    // — 로그인 제출 —
     loginConfirmBtn.addEventListener('click', async () => {
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
@@ -373,7 +348,7 @@ import { loadCheckList } from './checklist.js';
         }
     });
 
-    // --- 회원가입 팝업 열기/닫기 ---
+    // — 회원가입 팝업 열기/닫기 —
     showRegisterBtn.addEventListener('click', () => {
         registerPopup.style.display = 'flex';
         backdrop.style.display = 'block';
@@ -386,7 +361,7 @@ import { loadCheckList } from './checklist.js';
         registerMsg.textContent = '';
     });
 
-    // --- 회원가입 제출 ---
+    // — 회원가입 제출 —
     registerBtn.addEventListener('click', async () => {
         const username = regUsernameInput.value.trim();
         const password = regPasswordInput.value;
@@ -648,71 +623,69 @@ import { loadCheckList } from './checklist.js';
         floorplanContainer.appendChild(pin);
     }
 
-  // --- 물건 리스트 렌더링 ---
- function renderPinList() {
-  pinListDiv.innerHTML = '';
-  pins.forEach(pin => {
-    const div = document.createElement('div');
-    div.className = 'pinItem';
-    div.dataset.id = pin.id;
-    div.dataset.color = pin.color;
-    div.innerHTML = `
+    // --- 물건 리스트 렌더링 ---
+    function renderPinList() {
+        pinListDiv.innerHTML = '';
+        pins.forEach(pin => {
+            const div = document.createElement('div');
+            div.className = 'pinItem';
+            div.dataset.id = pin.id;
+            div.dataset.color = pin.color;
+            div.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
         <div class="pinEmoji">${pin.emoji || '📌'}</div><div class="pinName">${pin.name}</div>
       </div>
       <div class="pinStatus">${pin.comment ? '코멘트 있음' : ''}</div>
     `;
-    div.addEventListener('click', () => openEditModal(pin));
-    pinListDiv.appendChild(div);
-  });
-}
-function addSearchInputOnly() {
-  const pinListDiv = document.getElementById('pinList');
-  if (!pinListDiv) return;
+            div.addEventListener('click', () => openEditModal(pin));
+            pinListDiv.appendChild(div);
+        });
+    }
+    function addSearchInputOnly() {
+        const pinListDiv = document.getElementById('pinList');
+        if (!pinListDiv) return;
 
-  // 중복 방지: 기존 검색창 제거
-  
+        // 중복 방지: 기존 검색창 제거
 
-  // 검색 이벤트
-  searchInput.addEventListener('input', () => {
-    const keyword = searchInput.value.trim().toLowerCase();
-    pins.forEach(pin => {
-      const match =
-        !keyword ||
-        pin.name.toLowerCase().includes(keyword) ||
-        (pin.emoji && pin.emoji.includes(keyword));
-      const pinEl = document.querySelector(`.pin[data-id="${pin.id}"]`);
-      const listEl = document.querySelector(`.pinItem[data-id="${pin.id}"]`);
-      if (pinEl) pinEl.style.display = match ? 'block' : 'none';
-      if (listEl) listEl.style.display = match ? 'flex' : 'none';
-    });
-  });
-}
 
-  // --- 히스토리 렌더링 ---
-  function renderHistory() {
-      historyListDiv.innerHTML = '';
-      pins.forEach(pin => {
-          const div = document.createElement('div');
-          div.className = 'pinItem';
-          div.dataset.id = pin.id;
-          div.innerHTML = `
-        <div class="pinEmoji">${pin.emoji || '📌'}</div><div class="pinName">${pin.name}</div>`;
-          div.addEventListener('click', (e) => {
-              const siblings = e.currentTarget.parentNode.querySelectorAll('.pinItem');
-              siblings.forEach(el => el.classList.remove('active'));
-              e.currentTarget.classList.add('active');
-              markHistory(pin)
-          });
-          historyListDiv.appendChild(div);
-      });
-      // history.forEach(h => {
-      //   const div = document.createElement('div');
-      //   div.className = 'historyItem';
-      //   div.textContent = `[${new Date(h.time).toLocaleString()}] ${h.text}`;
-      //   historyListDiv.appendChild(div);
-      // });
-  }
+        // 검색 이벤트
+        searchInput.addEventListener('input', () => {
+            const keyword = searchInput.value.trim().toLowerCase();
+            pins.forEach(pin => {
+                const match =
+                    !keyword ||
+                    pin.name.toLowerCase().includes(keyword) ||
+                    (pin.emoji && pin.emoji.includes(keyword));
+                const pinEl = document.querySelector(`.pin[data-id="${pin.id}"]`);
+                const listEl = document.querySelector(`.pinItem[data-id="${pin.id}"]`);
+                if (pinEl) pinEl.style.display = match ? 'block' : 'none';
+                if (listEl) listEl.style.display = match ? 'flex' : 'none';
+            });
+        });
+    }
+
+    // --- 히스토리 렌더링 ---
+    function renderHistory() {
+        historyListDiv.innerHTML = '';
+        pins.forEach(pin => {
+            const div = document.createElement('div');
+            div.className = 'pinItem';
+            div.dataset.id = pin.id;
+            div.dataset.color = pin.color;   // 나중에 필터에도 필요할 수 있으니
+            div.innerHTML = `
+        <div class="pinEmoji">${pin.emoji || '📌'}</div>
+        <div class="pinName">${pin.name}</div>
+      `;
+            div.addEventListener('click', () => {
+                // 활성화 표시
+                historyListDiv.querySelectorAll('.pinItem').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
+                // 궤적만 그리기
+                markHistory(pin);
+            });
+            historyListDiv.appendChild(div);
+        });
+    }
 
     function markHistory(pin) {
         document.querySelectorAll('.pinHistory').forEach(el => el.remove());
@@ -766,54 +739,54 @@ function addSearchInputOnly() {
         console.log('현재 DOM에 .pinHistory 수:', document.querySelectorAll('.pinHistory').length);
     }
 
-  // --- 물건 추가 팝업 & API 호출 ---
-  addPinBtn.addEventListener('click', () => {
-      if (!authToken) { alert('로그인 후 이용해주세요.'); return; }
-      addPinPopup.style.display = 'flex';
-      addPinPopup.style.left = (floorplanContainer.clientWidth / 2 - addPinPopup.clientWidth / 2) + 'px';
-      addPinPopup.style.top = (floorplanContainer.clientHeight / 2 - addPinPopup.clientHeight / 2) + 'px';
-      newPinNameInput.value = '';
-      newPinEmojiInput.value = '';
-      newPinColorSelect.value = '#ff8c00';
-  });
-// 핀 추가 시 중앙 좌표로 고정
-confirmAddPinBtn.addEventListener('click', async () => {
-  const name = newPinNameInput.value.trim();
-  const emoji = newPinEmojiInput.value.trim() || '';
-  const color = newPinColorSelect.value;
-  if (!name) { alert('물건 이름을 입력하세요.'); return; }
-  if (!currentPlaceId) { alert('장소가 선택되지 않았습니다.'); return; }
-  const x = floorplanContainer.clientWidth / 2 - 16;
-  const y = floorplanContainer.clientHeight / 2 - 16;
-  try {
-      const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, emoji, color, x, y })
-      });
-      const data = await res.json();
-      if (res.ok) {
-          const p = { id: data._id, name: data.name, emoji: data.emoji, color: data.color, x: data.x, y: data.y, comment: data.comment };
-          pins.push(p);
-          createPin(p.x, p.y, p);
-          renderPinList();
-          addPinPopup.style.display = 'none';
-          renderHistory();
-      } else {
-          alert(data.error || '추가 실패');
-      }
-  } catch {
-      alert('서버 오류');
-  }
-});
+    // --- 물건 추가 팝업 & API 호출 ---
+    addPinBtn.addEventListener('click', () => {
+        if (!authToken) { alert('로그인 후 이용해주세요.'); return; }
+        addPinPopup.style.display = 'flex';
+        addPinPopup.style.left = (floorplanContainer.clientWidth / 2 - addPinPopup.clientWidth / 2) + 'px';
+        addPinPopup.style.top = (floorplanContainer.clientHeight / 2 - addPinPopup.clientHeight / 2) + 'px';
+        newPinNameInput.value = '';
+        newPinEmojiInput.value = '';
+        newPinColorSelect.value = '#ff8c00';
+    });
+    // 핀 추가 시 중앙 좌표로 고정
+    confirmAddPinBtn.addEventListener('click', async () => {
+        const name = newPinNameInput.value.trim();
+        const emoji = newPinEmojiInput.value.trim() || '';
+        const color = newPinColorSelect.value;
+        if (!name) { alert('물건 이름을 입력하세요.'); return; }
+        if (!currentPlaceId) { alert('장소가 선택되지 않았습니다.'); return; }
+        const x = floorplanContainer.clientWidth / 2 - 16;
+        const y = floorplanContainer.clientHeight / 2 - 16;
+        try {
+            const res = await apiFetch(`/api/places/${currentPlaceId}/pins`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, emoji, color, x, y })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const p = { id: data._id, name: data.name, emoji: data.emoji, color: data.color, x: data.x, y: data.y, comment: data.comment };
+                pins.push(p);
+                createPin(p.x, p.y, p);
+                renderPinList();
+                addPinPopup.style.display = 'none';
+                renderHistory();
+            } else {
+                alert(data.error || '추가 실패');
+            }
+        } catch {
+            alert('서버 오류');
+        }
+    });
 
 
-  cancelAddPinBtn.addEventListener('click', () => {
-    addPinPopup.style.display = 'none';
-    newPinNameInput.value = '';
-    newPinEmojiInput.value = '';
-    newPinColorSelect.value = '#ff8c00';
-  })
+    cancelAddPinBtn.addEventListener('click', () => {
+        addPinPopup.style.display = 'none';
+        newPinNameInput.value = '';
+        newPinEmojiInput.value = '';
+        newPinColorSelect.value = '#ff8c00';
+    })
 
     // --- 편집 모달 열기/저장/삭제 ---
     function openEditModal(pin) {
@@ -908,22 +881,46 @@ confirmAddPinBtn.addEventListener('click', async () => {
             btn.classList.add('active');
             const pins = document.querySelectorAll('.pin:not(.pinHistory)');
 
-            // 2) 화면 전환 및 데이터 로드
             if (btn.dataset.tab === 'pinList') {
+                // — 물건 리스트 탭
                 pinListDiv.style.display = 'block';
                 historyListDiv.style.display = 'none';
                 pins.forEach(pin => pin.style.display = 'block');
                 renderPinList();
-                // 히스토리 궤적만 제거
-                document.querySelectorAll('.pinHistory').forEach(el => el.remove());
-                document.querySelectorAll('.historyLine').forEach(el => el.remove());
-            } else {
-                pinListDiv.style.display = 'none';
-                pins.forEach(pin => pin.style.display = 'none');
-                historyListDiv.style.display = 'block';
-                // 히스토리 탭 클릭 시 즉시 궤적 그리기
-                await loadHistory();
+                document.querySelectorAll('.pinHistory, .historyLine').forEach(el => el.remove());
+
+                // **버튼 활성화**
+                addPinBtn.disabled = false;
+                movePinBtn.disabled = false;
             }
+            else {
+                // — 이동 히스토리 탭
+                pinListDiv.style.display = 'none';
+                historyListDiv.style.display = '';
+                pins.forEach(pin => pin.style.display = 'none');
+                await loadHistory();
+                renderHistory();
+
+                // **버튼 비활성화**
+                addPinBtn.disabled = true;
+                movePinBtn.disabled = true;
+            }
+            // 2) 화면 전환 및 데이터 로드
+            // if (btn.dataset.tab === 'pinList') {
+            //     pinListDiv.style.display = 'block';
+            //     historyListDiv.style.display = 'none';
+            //     pins.forEach(pin => pin.style.display = 'block');
+            //     renderPinList();
+            //     // 히스토리 궤적만 제거
+            //     document.querySelectorAll('.pinHistory').forEach(el => el.remove());
+            //     document.querySelectorAll('.historyLine').forEach(el => el.remove());
+            // } else {
+            //     pinListDiv.style.display = 'none';
+            //     historyListDiv.style.display = '';
+            //     // 히스토리 탭 클릭 시 즉시 궤적 그리기
+            //     await loadHistory();
+            //     renderHistory();
+            // }
         });
     });
 
