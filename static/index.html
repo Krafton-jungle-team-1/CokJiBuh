@@ -74,6 +74,17 @@
       <div id="pinList"></div>
       <div id="historyList" style="display:none;"></div>
     </div>
+    <button id="checklistBtn">&#10004;</button>
+    <div id="checklist">
+      <div id="checklistHeader">
+        <h3>체크리스트</h3>
+        <form>
+          <input type="text" id="checklistInput" placeholder="체크리스트 항목 추가" />
+          <button id="addChecklistBtn">추가</button>
+        </form>
+      </div>
+      <div id="checklistContent"></div>
+    </div>
     <div id="floorplan-container">
       <img id="floorplan" alt="도면 이미지" draggable="false" />
 
@@ -118,6 +129,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@3.0.3/dist/index.min.js"></script>
   <script src="/static/script/emojiLoader.js"></script>
   <script src="/static/script/index.js"></script>
+  <script src="/static/script/checklist.js"></script>
 </body>
 
 </html>
