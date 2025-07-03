@@ -669,21 +669,7 @@ function addSearchInputOnly() {
   if (!pinListDiv) return;
 
   // 중복 방지: 기존 검색창 제거
-  const existingInput = document.getElementById('searchInputOnly');
-  if (existingInput) existingInput.remove();
-
-  const searchInput = document.createElement('input');
-  searchInput.type = 'text';
-  searchInput.id = 'searchInputOnly';
-  searchInput.placeholder = '물건명 또는 이모지 검색';
-  searchInput.style.width = '90%';
-  searchInput.style.margin = '10px auto';
-  searchInput.style.display = 'block';
-  searchInput.style.padding = '6px 8px';
-  searchInput.style.fontSize = '14px';
-
-  // 삽입
-  pinListDiv.parentNode.insertBefore(searchInput, pinListDiv);
+  
 
   // 검색 이벤트
   searchInput.addEventListener('input', () => {
