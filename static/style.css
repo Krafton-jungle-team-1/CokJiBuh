@@ -788,3 +788,162 @@ background-color: #ffa726;
   outline-offset: 2px;
 }
 
+
+@media (max-width: 768px) {
+  /* 시작 화면 너비 줄이기 */
+  #startScreen {
+    width: 90vw;
+    padding: 20px 15px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  }
+  #startScreen h1 {
+    font-size: 28px;
+  }
+  #placeNameInput {
+    height: 44px;
+    font-size: 14px;
+  }
+  #uploadLabel {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  /* 메인 화면 - flex 방향 세로로 변경 */
+  #mainApp {
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* 사이드바 */
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px; /* 기본 숨김 상태 */
+    width: 280px;
+    height: 100vh;
+    padding: 12px 16px;
+    box-shadow: 3px 0 8px rgba(0,0,0,0.12);
+    transition: left 0.3s ease;
+    z-index: 2000;
+  }
+
+  /* 사이드바 보이기 */
+  #mainApp.sidebar-visible #sidebar {
+    left: 0;
+  }
+
+  /* 도면 컨테이너는 사이드바 보일 때 크기 조절 */
+  #floorplan-container {
+    flex: 1 1 auto;
+    border-left: none;
+    border-top: 1px solid #ddd;
+    margin-top: 60px; /* toggleSidebarBtn 높이 고려 */
+  }
+
+  /* 토글 버튼 위치 조정 */
+  #toggleSidebarBtn {
+    position: fixed;
+    top: 10px;
+    left: 16px;
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
+    z-index: 3001;
+    transition: left 0.3s ease;
+  }
+  #mainApp.sidebar-visible #toggleSidebarBtn {
+    left: 295px; /* sidebar width 280 + margin */
+  }
+
+  /* 탭 버튼 크기 조절 */
+  .tabButton {
+    font-size: 13px;
+    padding: 6px 0;
+  }
+
+  /* 버튼 그룹 */
+  #actionButtons {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  button.actionBtn {
+    font-size: 14px;
+    padding: 8px 0;
+  }
+
+  /* 핀 리스트, 히스토리 리스트 패딩 축소 */
+  #pinList,
+  #historyList {
+    padding: 8px 6px;
+    font-size: 14px;
+  }
+
+  /* 핀 아이템 글자 크기 및 간격 축소 */
+  .pinItem {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .pinName {
+    font-size: 14px;
+  }
+  .pinEmoji {
+    font-size: 20px;
+    width: 26px;
+  }
+
+  /* 편집 모달 크기 조절 */
+  #editModal {
+    width: 90vw;
+    max-width: 320px;
+    padding: 20px 16px;
+  }
+  #editModal input,
+  #editModal select,
+  #editModal textarea {
+    font-size: 14px;
+  }
+  #editModalButtons > button {
+    font-size: 14px;
+    padding: 10px 12px;
+    margin: 0 4px;
+  }
+
+  /* 로그인 팝업 크기 및 위치 조정 */
+  #loginPopup,
+  #registerPopup {
+    width: 90vw;
+    max-width: 280px;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  /* 로그인 버튼 크기 조절 */
+  #loginBtn,
+  #showRegisterBtn {
+    font-size: 13px;
+    padding: 5px 10px;
+  }
+
+  /* #addPinPopup 너비 줄이기 */
+  #addPinPopup {
+    width: 90vw;
+    max-width: 220px;
+    padding: 12px 14px;
+  }
+
+  /* 기타 텍스트 크기 및 간격 소폭 축소 */
+  #sidebar h2 {
+    font-size: 18px;
+  }
+  #historyList {
+    font-size: 13px;
+  }
+
+  /* #floorplan 최대 크기 조절 */
+  #floorplan {
+    max-width: 100%;
+    max-height: 100%;
+  }
+}
