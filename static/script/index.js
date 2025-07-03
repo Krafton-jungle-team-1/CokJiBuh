@@ -105,6 +105,7 @@
       startScreen.style.display = 'block';
       mainApp.style.display = 'none';
       loading.style.display = 'none';
+      showRegisterBtn.style.display = 'block';
       mainApp.classList.add('sidebar-visible');
       console.log('startScreen', startScreen);
       console.log('mainApp', mainApp);
