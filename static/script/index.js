@@ -7,15 +7,11 @@
   async function bootstrap() {
       const t = localStorage.getItem('token');
       const u = localStorage.getItem('username');
-      const pId = localStorage.getItem('placeId');
       if (t && u) {
           authToken = t;
           setLoggedIn(u);
-          if (pId) {
-              currentPlaceId = pId;
-              await fetchLastPlaceAndInit();
-              return;
-          }
+          await fetchLastPlaceAndInit();
+          return;
       }
       init();
   }
