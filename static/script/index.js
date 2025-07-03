@@ -588,6 +588,11 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ pin_id: id, x: pins[idx].x, y: pins[idx].y })
                 });
+                await apiFetch(`/items/${id}/move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newX: pins[idx].x, newY: pins[idx].y })
+                });
                 loadHistory();
                 renderHistory();
                 renderPinList();
