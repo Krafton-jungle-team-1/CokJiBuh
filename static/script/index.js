@@ -1,5 +1,5 @@
 // signTotal
-
+import { loadCheckList } from './checklist.js';
 
 (() => {
 
@@ -237,6 +237,7 @@ function showAllPins() {
       floorplan.onload = () => {
           loading.style.display = 'none';
           floorplan.style.display = 'block';
+          loadCheckList();
           loadPins();
           loadHistory();
       };
